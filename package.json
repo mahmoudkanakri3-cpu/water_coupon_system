@@ -1,10 +1,9 @@
 {
   "name": "water_coupon_system",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Water Coupon System",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
   "keywords": [],
@@ -13,9 +12,8 @@
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^11.10.0",
     "express": "^5.2.1",
-    "qrcode": "^1.5.4",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^6.0.1"
+    "qrcode": "^1.5.4"
   }
 }
