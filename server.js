@@ -1,17 +1,20 @@
 const express = require('express');
 const Database = require('better-sqlite3');
 const path = require('path');
+const cors = require('cors'); // إضافة cors لتفادي مشاكل الاتصال
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// تفعيل CORS و Express Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // الاتصال بقاعدة البيانات بشكل متزامن
 const db = new Database(path.join(__dirname, 'database.sqlite'));
 
-// تهيئة الجداول الحسابات عند بدء التشغيل
+// تهيئة الجداول عند بدء التشغيل
 function initDB() {
     try {
         db.exec(`
@@ -216,6 +219,11 @@ app.get('/api/station/stats', (req, res) => {
     }
 });
 
+// إعادة توجيه كافة المسارات الأخرى لملف الصفحة الرئيسية
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`السيرفر يعمل بنجاح على: http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
