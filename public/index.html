@@ -24,7 +24,7 @@
 
         <!-- قسم الخصم -->
         <div class="card">
-            <h3>خصم كوبون (للموزع)</h3>
+            <h3>خصم كوبون (ل للموزع)</h3>
             
             <input type="tel" id="driverPhone" placeholder="رقم هاتف الموزع">
             <input type="password" id="driverPassword" placeholder="كلمة المرور">
@@ -38,8 +38,9 @@
     <div id="toast"></div>
 
     <script>
-        // تحديد رابط الـ API: يعمل تلقائياً إذا كان الملف يخدمه السيرفر، أو يستهدف عنوان IP الجهاز
-const API_BASE_URL = 'http://192.168.100.10:3000';
+        // ترك المسار فارغاً ليعتمد تلقائياً على نفس سيرفر Render
+        const API_BASE_URL = '';
+
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.innerText = message;
