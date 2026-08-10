@@ -241,13 +241,14 @@ app.post('/api/drivers', async (req, res) => {
     }
 });
 
-// خصم كوبون من الزبون (بواسطة الموزع)
+// خصم كوبونات من الزبون (بواسطة الموزع) - دعم تحديد الكمية
 app.post('/api/deduct', async (req, res) => {
     try {
-        const { driverPhone, driverPassword, customerPhone } = req.body;
+        const { driverPhone, driverPassword, customerPhone, amount } = req.body;
         const dPhone = String(driverPhone || '').trim();
         const dPass = String(driverPassword || '').trim();
         const cPhone = String(customerPhone || '').trim();
+        const deductAmount = Math.max(1, parseInt(amount) || 1);
 
         // 1. التحقق من الموزع
         const driverRes = await pool.query(
@@ -273,25 +274,28 @@ app.post('/api/deduct', async (req, res) => {
 
         const customer = customerRes.rows[0];
 
-        if (customer.coupons <= 0) {
-            return res.status(400).json({ success: false, message: 'رصيد الزبون لا يكفي (0 كوبون)' });
+        if (customer.coupons < deductAmount) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `رصيد الزبون لا يكفي. الرصيد الحالي: ${customer.coupons} كوبون` 
+            });
         }
 
-        // 3. خصم كوبون واحد
+        // 3. خصم الكوبونات
         const updatedCustomer = await pool.query(
-            'UPDATE customers SET coupons = coupons - 1 WHERE id = $1 RETURNING *',
-            [customer.id]
+            'UPDATE customers SET coupons = coupons - $1 WHERE id = $2 RETURNING *',
+            [deductAmount, customer.id]
         );
 
         // 4. تسجيل عملية الخصم
         await pool.query(
             'INSERT INTO transactions (station_id, customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5, $6)',
-            [driver.station_id || customer.station_id || 1, customer.phone, customer.name, 'خصم', 1, driver.name]
+            [driver.station_id || customer.station_id || 1, customer.phone, customer.name, 'خصم', deductAmount, driver.name]
         );
 
         res.json({
             success: true,
-            message: `تم خصم كوبون واحد بنجاح. الرصيد المتبقي للزبون (${customer.name}): ${updatedCustomer.rows[0].coupons}`
+            message: `تم خصم ${deductAmount} كوبون بنجاح. الرصيد المتبقي للزبون (${customer.name}): ${updatedCustomer.rows[0].coupons}`
         });
 
     } catch (err) {

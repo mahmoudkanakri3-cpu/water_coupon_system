@@ -67,11 +67,12 @@
 
         <!-- قسم الخصم للموزع -->
         <div class="card">
-            <h3 style="text-align: center; color: #28a745;">خصم كوبون (للموزع)</h3>
+            <h3 style="text-align: center; color: #28a745;">خصم كوبونات (للموزع)</h3>
             <input type="tel" id="driverPhone" placeholder="رقم هاتف الموزع">
             <input type="password" id="driverPassword" placeholder="كلمة مرور الموزع">
             <input type="tel" id="deductCustomerPhone" placeholder="رقم هاتف الزبون">
-            <button class="btn btn-success" onclick="deductCoupon()">خصم كوبون واحد</button>
+            <input type="number" id="deductAmount" placeholder="عدد الكوبونات المراد خصمها" value="1" min="1">
+            <button class="btn btn-success" onclick="deductCoupon()">خصم الكوبونات</button>
         </div>
 
     </div>
@@ -116,23 +117,24 @@
             const driverPhone = document.getElementById('driverPhone').value.trim();
             const driverPassword = document.getElementById('driverPassword').value.trim();
             const customerPhone = document.getElementById('deductCustomerPhone').value.trim();
+            const amount = parseInt(document.getElementById('deductAmount').value) || 1;
 
-            if (!driverPhone || !driverPassword || !customerPhone) {
-                return showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+            if (!driverPhone || !driverPassword || !customerPhone || amount < 1) {
+                return showToast('يرجى ملء جميع الحقول بشكل صحيح', 'error');
             }
 
             try {
                 const res = await fetch('/api/deduct', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ driverPhone, driverPassword, customerPhone })
+                    body: JSON.stringify({ driverPhone, driverPassword, customerPhone, amount })
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     showToast(data.message, 'success');
                     document.getElementById('searchPhone').value = customerPhone;
-                    checkBalance(); // تحديث القراءة فوراً بعد الخصم
+                    checkBalance();
                 } else {
                     showToast(data.message, 'error');
                 }
