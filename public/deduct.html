@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كوبونات الماء - الاستعلام والخصم</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        
+        <div style="text-align: right; margin-bottom: 15px;">
+            <a href="/" class="btn" style="text-decoration: none; display: inline-block; width: auto; background-color: #6c757d;">← العودة لشاشة المحطة</a>
+        </div>
+
+        <h1 style="text-align: center; color: #007bf5; margin-bottom: 20px;">💧 نظام كوبونات الماء</h1>
+
+        <!-- قسم الاستعلام -->
+        <div class="card">
+            <h3 style="text-align: center; color: #007bf5;">استعلام عن رصيد الكوبونات</h3>
+            <input type="tel" id="searchPhone" placeholder="أدخل رقم هاتف الزبون">
+            <button class="btn" onclick="checkBalance()">عرض الرصيد</button>
+
+            <div id="resultArea" style="text-align: center; margin-top: 15px;"></div>
+        </div>
+
+        <!-- قسم الخصم -->
+        <div class="card">
+            <h3 style="text-align: center; color: #28a745;">خصم كوبون (للموزع)</h3>
+            <input type="tel" id="driverPhone" placeholder="رقم هاتف الموزع">
+            <input type="password" id="driverPassword" placeholder="كلمة المرور">
+            <input type="tel" id="custPhoneDeduct" placeholder="رقم هاتف الزبون">
+            <input type="number" id="deductAmount" placeholder="عدد الكوبونات المراد خصمها" value="1">
+            <button class="btn btn-success" onclick="deductCoupons()">تسجيل خصم الكوبونات</button>
+        </div>
+
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = `show ${type}`;
+            setTimeout(() => { toast.className = toast.className.replace(`show ${type}`, ''); }, 3000);
+        }
+
+        async function checkBalance() {
+            const phone = document.getElementById('searchPhone').value.trim();
+            if (!phone) return showToast('يرجى إدخال رقم الهاتف', 'error');
+
+            try {
+                const res = await fetch(`/api/customers/${phone}`);
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    document.getElementById('resultArea').innerHTML = `
+                        <h1 style="font-size: 3rem; color: #007bf5; margin: 10px 0;">${data.coupons}</h1>
+                        <p style="font-size: 1.1rem; color: #555;">مرحباً <strong>${data.name}</strong> - كوبون متبقي</p>
+                    `;
+                } else {
+                    document.getElementById('resultArea').innerHTML = '';
+                    showToast(data.message || 'الزبون غير مسجل', 'error');
+                }
+            } catch (err) {
+                showToast('تعذر الاتصال بالسيرفر', 'error');
+            }
+        }
+
+        async function deductCoupons() {
+            const driverPhone = document.getElementById('driverPhone').value.trim();
+            const driverPassword = document.getElementById('driverPassword').value.trim();
+            const customerPhone = document.getElementById('custPhoneDeduct').value.trim();
+            const amount = document.getElementById('deductAmount').value;
+
+            if (!driverPhone || !driverPassword || !customerPhone) {
+                return showToast('يرجى ملء جميع البيانات', 'error');
+            }
+
+            try {
+                const res = await fetch('/api/deduct-coupon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ driverPhone, driverPassword, customerPhone, amount })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('custPhoneDeduct').value = '';
+                } else {
+                    showToast(data.message || 'فشلت عملية الخصم', 'error');
+                }
+            } catch (err) {
+                showToast('تعذر الاتصال بالسيرفر', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

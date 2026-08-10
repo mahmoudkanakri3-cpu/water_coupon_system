@@ -3,52 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كوبونات الماء - الاستعلام والخصم</title>
+    <title>لوحة تحكم المحطة والإحصائيات</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .nav-back-btn {
+        .nav-link-btn {
             display: inline-block;
-            background-color: #6c757d;
+            background-color: #007bf5;
             color: #ffffff !important;
-            padding: 8px 16px;
+            padding: 10px 18px;
             border-radius: 8px;
             text-decoration: none;
             font-weight: bold;
             margin-bottom: 15px;
             transition: background-color 0.2s ease;
         }
-        .nav-back-btn:hover {
-            background-color: #5a6268;
+        .nav-link-btn:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <div class="container">
         
-        <!-- زر العودة للشاشة الرئيسية (المحطة) -->
+        <!-- زر الانتقال لشاشة الخصم والاستعلام -->
         <div style="text-align: right;">
-            <a href="/" class="nav-back-btn">← العودة لشاشة المحطة</a>
+            <a href="/deduct" class="nav-link-btn">← الانتقال إلى شاشة الخصم والاستعلام</a>
         </div>
 
-        <h1 style="text-align: center; color: #007bf5; margin-bottom: 20px;">💧 كوبونات الماء</h1>
-
-        <!-- قسم استعلام رصيد الكوبونات -->
-        <div class="card">
-            <h3 style="text-align: center; color: #007bf5;">استعلام عن رصيد الكوبونات</h3>
-            <input type="tel" id="searchPhone" placeholder="أدخل رقم هاتف الزبون">
-            <button class="btn" onclick="checkBalance()">عرض الرصيد</button>
-
-            <div id="resultArea" style="text-align: center; margin-top: 15px;"></div>
+        <!-- تسجيل الدخول -->
+        <div id="loginSection" class="card">
+            <h2>🏢 تسجيل دخول المحطة</h2>
+            <input type="tel" id="stationPhone" placeholder="رقم هاتف المحطة" value="0700000000">
+            <input type="password" id="stationPassword" placeholder="كلمة المرور" value="admin123">
+            <button class="btn" onclick="loginStation()">دخول</button>
         </div>
 
-        <!-- قسم خصم الكوبونات (للموزعين) -->
-        <div class="card">
-            <h3 style="text-align: center; color: #28a745;">خصم كوبون (للموزع)</h3>
-            <input type="tel" id="driverPhone" placeholder="رقم هاتف الموزع">
-            <input type="password" id="driverPassword" placeholder="كلمة المرور">
-            <input type="tel" id="custPhoneDeduct" placeholder="رقم هاتف الزبون">
-            <input type="number" id="deductAmount" placeholder="عدد الكوبونات المراد خصمها" value="1">
-            <button class="btn btn-success" onclick="deductCoupons()">تسجيل خصم الكوبونات</button>
+        <!-- لوحة التحكم الإدارية -->
+        <div id="dashboardSection" style="display: none;">
+            <div style="display: flex; justify-style: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+                <h2 id="stationTitle" style="margin: 0;">🏬 لوحة المحطة</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="/deduct" class="btn" style="width: auto; padding: 8px 16px; margin: 0; text-decoration: none; background-color: #007bf5;">شاشة الخصم</a>
+                    <button class="btn btn-danger" style="width: auto; padding: 8px 16px; margin: 0;" onclick="logout()">خروج</button>
+                </div>
+            </div>
+
+            <!-- بطاقات الإحصائيات -->
+            <div class="stats-grid">
+                <div class="stat-card green">
+                    <h4>إجمالي الكوبونات المشحونة</h4>
+                    <div class="number" id="statRecharged">0</div>
+                </div>
+                <div class="stat-card orange">
+                    <h4>إجمالي الكوبونات المخصومة</h4>
+                    <div class="number" id="statDeducted">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>رصيد الزبائن الحالي</h4>
+                    <div class="number" id="statBalance">0</div>
+                </div>
+            </div>
+
+            <!-- إضافة زبون / شحن -->
+            <div class="card">
+                <h3>➕ إضافة زبون / شحن رصيد</h3>
+                <input type="text" id="custName" placeholder="اسم الزبون">
+                <input type="tel" id="custPhone" placeholder="رقم هاتف الزبون">
+                <input type="number" id="custCoupons" placeholder="عدد الكوبونات" value="10">
+                <button class="btn" onclick="addCustomer()">حفظ وشحن</button>
+            </div>
+
+            <!-- إضافة موزع -->
+            <div class="card">
+                <h3>🚚 إضافة موزع (سائق) جديد</h3>
+                <input type="text" id="driverName" placeholder="اسم الموزع">
+                <input type="tel" id="driverPhone" placeholder="رقم الهاتف">
+                <input type="password" id="driverPassword" placeholder="كلمة المرور">
+                <button class="btn btn-success" onclick="addDriver()">إضافة الموزع</button>
+            </div>
+
+            <!-- ملخص أداء الموزعين -->
+            <div class="card">
+                <h3>📈 أداء الموزعين (إجمالي الخصم)</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم الموزع</th>
+                                <th>عدد العمليات</th>
+                                <th>إجمالي الكوبونات المخصومة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driversStatsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- سجل الحركات -->
+            <div class="card">
+                <h3>📊 سجل الحركات الأخيرة</h3>
+                <button class="btn" style="background-color: #555; margin-bottom: 12px;" onclick="loadDashboardData()">تحديث البيانات</button>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الزبون</th>
+                                <th>الهاتف</th>
+                                <th>العملية</th>
+                                <th>الكمية</th>
+                                <th>المنفذ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -56,6 +126,8 @@
     <div id="toast"></div>
 
     <script>
+        const API_BASE_URL = '';
+
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.innerText = message;
@@ -63,55 +135,134 @@
             setTimeout(() => { toast.className = toast.className.replace(`show ${type}`, ''); }, 3000);
         }
 
-        async function checkBalance() {
-            const phone = document.getElementById('searchPhone').value.trim();
-            if (!phone) return showToast('يرجى إدخال رقم الهاتف', 'error');
+        async function loginStation() {
+            const phone = document.getElementById('stationPhone').value.trim();
+            const password = document.getElementById('stationPassword').value.trim();
 
             try {
-                const res = await fetch(`/api/customers/${phone}`);
+                const res = await fetch(`${API_BASE_URL}/api/station/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, password })
+                });
                 const data = await res.json();
 
-                if (res.ok && data.success) {
-                    document.getElementById('resultArea').innerHTML = `
-                        <h1 style="font-size: 3rem; color: #007bf5; margin: 10px 0;">${data.coupons}</h1>
-                        <p style="font-size: 1.1rem; color: #555;">مرحباً <strong>${data.name}</strong> - كوبون متبقي</p>
-                    `;
+                if (data.success) {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('dashboardSection').style.display = 'block';
+                    document.getElementById('stationTitle').innerText = `🏬 ${data.station.name}`;
+                    showToast('تم تسجيل الدخول بنجاح', 'success');
+                    loadDashboardData();
                 } else {
-                    document.getElementById('resultArea').innerHTML = '';
-                    showToast(data.message || 'الزبون غير موجود', 'error');
+                    showToast(data.message, 'error');
                 }
             } catch (err) {
                 showToast('تعذر الاتصال بالسيرفر', 'error');
             }
         }
 
-        async function deductCoupons() {
-            const driverPhone = document.getElementById('driverPhone').value.trim();
-            const driverPassword = document.getElementById('driverPassword').value.trim();
-            const customerPhone = document.getElementById('custPhoneDeduct').value.trim();
-            const amount = document.getElementById('deductAmount').value;
+        function logout() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('dashboardSection').style.display = 'none';
+            showToast('تم تسجيل الخروج', 'success');
+        }
 
-            if (!driverPhone || !driverPassword || !customerPhone) {
-                return showToast('يرجى ملء جميع الحقول المطلوب', 'error');
-            }
+        async function addCustomer() {
+            const name = document.getElementById('custName').value;
+            const phone = document.getElementById('custPhone').value;
+            const coupons = document.getElementById('custCoupons').value;
 
             try {
-                const res = await fetch('/api/deduct-coupon', {
+                const res = await fetch(`${API_BASE_URL}/api/customers`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ driverPhone, driverPassword, customerPhone, amount })
+                    body: JSON.stringify({ name, phone, coupons })
                 });
-
                 const data = await res.json();
-
-                if (res.ok && data.success) {
+                
+                if (data.success) {
                     showToast(data.message, 'success');
-                    document.getElementById('custPhoneDeduct').value = '';
+                    document.getElementById('custName').value = '';
+                    document.getElementById('custPhone').value = '';
+                    loadDashboardData();
                 } else {
-                    showToast(data.message || 'فشلت عملية الخصم', 'error');
+                    showToast(data.message || data.error, 'error');
                 }
             } catch (err) {
-                showToast('تعذر الاتصال بالسيرفر', 'error');
+                showToast('خطأ في الاتصال بالسيرفر', 'error');
+            }
+        }
+
+        async function addDriver() {
+            const name = document.getElementById('driverName').value;
+            const phone = document.getElementById('driverPhone').value;
+            const password = document.getElementById('driverPassword').value;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/drivers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('driverName').value = '';
+                    document.getElementById('driverPhone').value = '';
+                    document.getElementById('driverPassword').value = '';
+                    loadDashboardData();
+                } else {
+                    showToast(data.error || data.message, 'error');
+                }
+            } catch (err) {
+                showToast('خطأ في الاتصال بالسيرفر', 'error');
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                const statsRes = await fetch(`${API_BASE_URL}/api/station/stats`);
+                const statsData = await statsRes.json();
+
+                if (statsData.success) {
+                    document.getElementById('statRecharged').innerText = statsData.stats.totalRecharged;
+                    document.getElementById('statDeducted').innerText = statsData.stats.totalDeducted;
+                    document.getElementById('statBalance').innerText = statsData.stats.totalBalance;
+
+                    const driversTbody = document.getElementById('driversStatsTable');
+                    driversTbody.innerHTML = '';
+                    statsData.stats.driverStats.forEach(d => {
+                        driversTbody.innerHTML += `
+                            <tr>
+                                <td>${d.driver_name}</td>
+                                <td>${d.operations_count}</td>
+                                <td>${d.total_deducted}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                const res = await fetch(`${API_BASE_URL}/api/station/transactions`);
+                const data = await res.json();
+
+                if (data.success) {
+                    const tbody = document.getElementById('transactionsTable');
+                    tbody.innerHTML = '';
+                    data.transactions.forEach(t => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${t.customer_name || '-'}</td>
+                                <td>${t.customer_phone}</td>
+                                <td>${t.action_type}</td>
+                                <td>${t.amount}</td>
+                                <td>${t.driver_name}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
     </script>

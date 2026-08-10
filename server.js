@@ -14,41 +14,19 @@ const pool = new Pool({
 
 // ------------------- توجيه الصفحات -------------------
 
-// الصفحة الرئيسية (شاشة المحطة)
+// الصفحة الرئيسية (المحطة)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'station.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // شاشة الخصم والاستعلام
 app.get('/deduct', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'deduct.html'));
 });
 
-// مسار فرعي لشاشة المحطة للتوافق
-app.get('/station', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'station.html'));
-});
+// ------------------- API الزبائن والخصم -------------------
 
-// ------------------- API الزبائن -------------------
-
-// الاستعلام عن رصيد زبون (Query Param)
-app.get('/api/check-balance', async (req, res) => {
-    try {
-        const { phone } = req.query;
-        const result = await pool.query('SELECT name, coupons FROM customers WHERE phone = $1', [phone]);
-
-        if (result.rows.length > 0) {
-            res.json({ success: true, name: result.rows[0].name, coupons: result.rows[0].coupons });
-        } else {
-            res.status(404).json({ success: false, message: 'الزبون غير موجود' });
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
-    }
-});
-
-// الاستعلام عن رصيد زبون (URL Param)
+// 1. الاستعلام عن رصيد الزبون
 app.get('/api/customers/:phone', async (req, res) => {
     try {
         const { phone } = req.params;
@@ -57,45 +35,45 @@ app.get('/api/customers/:phone', async (req, res) => {
         if (result.rows.length > 0) {
             res.json({ success: true, name: result.rows[0].name, coupons: result.rows[0].coupons });
         } else {
-            res.status(404).json({ success: false, message: 'الزبون غير موجود' });
+            res.status(404).json({ success: false, message: 'الزبون غير مسجل في النظام' });
         }
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
+        res.status(500).json({ success: false, message: 'خطأ في الاتصال بالخادم' });
     }
 });
 
-// خصم كوبونات بواسطة الموزع
+// 2. خصم الكوبونات
 app.post('/api/deduct-coupon', async (req, res) => {
     try {
         const { customerPhone, driverPhone, driverPassword, amount } = req.body;
         const deductAmount = parseInt(amount) || 1;
 
-        // التحقق من الموزع
+        // التحقق من الموزع من جدول drivers
         const driverCheck = await pool.query(
             'SELECT name FROM drivers WHERE phone = $1 AND password = $2',
             [driverPhone, driverPassword]
         );
         if (driverCheck.rows.length === 0) {
-            return res.status(401).json({ success: false, message: 'بيانات الموزع غير صحيحة' });
+            return res.status(401).json({ success: false, message: 'بيانات الموزع (رقم الهاتف أو كلمة المرور) غير صحيحة' });
         }
 
-        // التحقق من الزبون ورصيده
+        // التحقق من الزبون من جدول customers
         const custCheck = await pool.query('SELECT id, name, coupons FROM customers WHERE phone = $1', [customerPhone]);
         if (custCheck.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'الزبون غير موجود' });
+            return res.status(404).json({ success: false, message: 'رقم الزبون غير مسجل في النظام' });
         }
 
         const customer = custCheck.rows[0];
         if (customer.coupons < deductAmount) {
-            return res.status(400).json({ success: false, message: 'رصيد الكوبونات غير كافٍ' });
+            return res.status(400).json({ success: false, message: 'رصيد الزبون لا يكفي للخصم' });
         }
 
-        // خصم الكوبونات
+        // تحديث رصيد الزبون
         const newBalance = customer.coupons - deductAmount;
         await pool.query('UPDATE customers SET coupons = $1 WHERE id = $2', [newBalance, customer.id]);
 
-        // تسجيل الحركة
+        // تسجيل العملية في جدول الحركات
         await pool.query(
             'INSERT INTO transactions (customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5)',
             [customerPhone, customer.name, 'خصم', deductAmount, driverCheck.rows[0].name]
@@ -109,13 +87,12 @@ app.post('/api/deduct-coupon', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'خطأ في تنفيذ عملية الخصم' });
+        res.status(500).json({ success: false, message: 'خطأ أثناء تنفيذ الخصم' });
     }
 });
 
-// ------------------- API المحطة الإدارية -------------------
+// ------------------- API المحطة -------------------
 
-// إضافة زبون جديد أو شحن رصيده
 app.post('/api/customers', async (req, res) => {
     try {
         const { name, phone, coupons } = req.body;
@@ -142,7 +119,6 @@ app.post('/api/customers', async (req, res) => {
     }
 });
 
-// إضافة موزع جديد
 app.post('/api/drivers', async (req, res) => {
     try {
         const { name, phone, password } = req.body;
@@ -150,11 +126,10 @@ app.post('/api/drivers', async (req, res) => {
         res.json({ success: true, message: 'تمت إضافة الموزع بنجاح' });
     } catch (err) {
         console.error(err);
-        res.status(400).json({ success: false, error: 'رقم هاتف الموزع مسجل مسبقاً أو بيانات غير صحيحة' });
+        res.status(400).json({ success: false, message: 'رقم هاتف الموزع مسجل مسبقاً' });
     }
 });
 
-// تسجيل دخول المحطة
 app.post('/api/station/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
@@ -171,7 +146,6 @@ app.post('/api/station/login', async (req, res) => {
     }
 });
 
-// إحصائيات لوحة التحكم
 app.get('/api/station/stats', async (req, res) => {
     try {
         const recharged = await pool.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE action_type = 'شحن'");
@@ -200,7 +174,6 @@ app.get('/api/station/stats', async (req, res) => {
     }
 });
 
-// سجل الحركات
 app.get('/api/station/transactions', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM transactions ORDER BY id DESC LIMIT 30');
