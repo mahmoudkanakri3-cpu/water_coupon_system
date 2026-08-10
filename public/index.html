@@ -15,22 +15,18 @@
             text-decoration: none;
             font-weight: bold;
             margin-bottom: 15px;
-            transition: background-color 0.2s ease;
-        }
-        .nav-link-btn:hover {
-            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <div class="container">
         
-        <!-- زر الانتقال لشاشة الخصم والاستعلام -->
+        <!-- زر الانتقال لشاشة الخصم -->
         <div style="text-align: right;">
             <a href="/deduct" class="nav-link-btn">← الانتقال إلى شاشة الخصم والاستعلام</a>
         </div>
 
-        <!-- تسجيل الدخول -->
+        <!-- قسم تسجيل الدخول -->
         <div id="loginSection" class="card">
             <h2>🏢 تسجيل دخول المحطة</h2>
             <input type="tel" id="stationPhone" placeholder="رقم هاتف المحطة" value="0700000000">
@@ -40,7 +36,7 @@
 
         <!-- لوحة التحكم الإدارية -->
         <div id="dashboardSection" style="display: none;">
-            <div style="display: flex; justify-style: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
                 <h2 id="stationTitle" style="margin: 0;">🏬 لوحة المحطة</h2>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <a href="/deduct" class="btn" style="width: auto; padding: 8px 16px; margin: 0; text-decoration: none; background-color: #007bf5;">شاشة الخصم</a>
@@ -80,6 +76,14 @@
                 <input type="tel" id="driverPhone" placeholder="رقم الهاتف">
                 <input type="password" id="driverPassword" placeholder="كلمة المرور">
                 <button class="btn btn-success" onclick="addDriver()">إضافة الموزع</button>
+            </div>
+
+            <!-- تغيير كلمة المرور للمحطة -->
+            <div class="card">
+                <h3>🔒 تغيير كلمة المرور للمحطة</h3>
+                <input type="password" id="currentPass" placeholder="كلمة المرور الحالية">
+                <input type="password" id="newPass" placeholder="كلمة المرور الجديدة">
+                <button class="btn" style="background-color: #ff9800;" onclick="changeStationPassword()">تحديث كلمة المرور</button>
             </div>
 
             <!-- ملخص أداء الموزعين -->
@@ -126,8 +130,6 @@
     <div id="toast"></div>
 
     <script>
-        const API_BASE_URL = '';
-
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.innerText = message;
@@ -140,7 +142,7 @@
             const password = document.getElementById('stationPassword').value.trim();
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/station/login`, {
+                const res = await fetch('/api/station/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone, password })
@@ -168,12 +170,12 @@
         }
 
         async function addCustomer() {
-            const name = document.getElementById('custName').value;
-            const phone = document.getElementById('custPhone').value;
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
             const coupons = document.getElementById('custCoupons').value;
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/customers`, {
+                const res = await fetch('/api/customers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone, coupons })
@@ -186,7 +188,7 @@
                     document.getElementById('custPhone').value = '';
                     loadDashboardData();
                 } else {
-                    showToast(data.message || data.error, 'error');
+                    showToast(data.message, 'error');
                 }
             } catch (err) {
                 showToast('خطأ في الاتصال بالسيرفر', 'error');
@@ -194,12 +196,12 @@
         }
 
         async function addDriver() {
-            const name = document.getElementById('driverName').value;
-            const phone = document.getElementById('driverPhone').value;
-            const password = document.getElementById('driverPassword').value;
+            const name = document.getElementById('driverName').value.trim();
+            const phone = document.getElementById('driverPhone').value.trim();
+            const password = document.getElementById('driverPassword').value.trim();
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/drivers`, {
+                const res = await fetch('/api/drivers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone, password })
@@ -213,16 +215,46 @@
                     document.getElementById('driverPassword').value = '';
                     loadDashboardData();
                 } else {
-                    showToast(data.error || data.message, 'error');
+                    showToast(data.message, 'error');
                 }
             } catch (err) {
                 showToast('خطأ في الاتصال بالسيرفر', 'error');
             }
         }
 
+        async function changeStationPassword() {
+            const currentPassword = document.getElementById('currentPass').value.trim();
+            const newPassword = document.getElementById('newPass').value.trim();
+            const phone = document.getElementById('stationPhone').value.trim();
+
+            if (!currentPassword || !newPassword) {
+                return showToast('يرجى ملء جميع حقول كلمة المرور', 'error');
+            }
+
+            try {
+                const res = await fetch('/api/station/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, currentPassword, newPassword })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('currentPass').value = '';
+                    document.getElementById('newPass').value = '';
+                    document.getElementById('stationPassword').value = newPassword;
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                showToast('خطأ أثناء التحديث', 'error');
+            }
+        }
+
         async function loadDashboardData() {
             try {
-                const statsRes = await fetch(`${API_BASE_URL}/api/station/stats`);
+                const statsRes = await fetch('/api/station/stats');
                 const statsData = await statsRes.json();
 
                 if (statsData.success) {
@@ -243,7 +275,7 @@
                     });
                 }
 
-                const res = await fetch(`${API_BASE_URL}/api/station/transactions`);
+                const res = await fetch('/api/station/transactions');
                 const data = await res.json();
 
                 if (data.success) {

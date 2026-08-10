@@ -14,7 +14,7 @@ const pool = new Pool({
 
 // ------------------- توجيه الصفحات -------------------
 
-// الصفحة الرئيسية (المحطة)
+// الصفحة الرئيسية (شاشة المحطة)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -43,7 +43,7 @@ app.get('/api/customers/:phone', async (req, res) => {
     }
 });
 
-// 2. خصم الكوبونات
+// 2. خصم الكوبونات بواسطة الموزع
 app.post('/api/deduct-coupon', async (req, res) => {
     try {
         const { customerPhone, driverPhone, driverPassword, amount } = req.body;
@@ -91,8 +91,9 @@ app.post('/api/deduct-coupon', async (req, res) => {
     }
 });
 
-// ------------------- API المحطة -------------------
+// ------------------- API المحطة والإدارة -------------------
 
+// إضافة زبون أو شحن رصيده
 app.post('/api/customers', async (req, res) => {
     try {
         const { name, phone, coupons } = req.body;
@@ -119,6 +120,7 @@ app.post('/api/customers', async (req, res) => {
     }
 });
 
+// إضافة موزع جديد
 app.post('/api/drivers', async (req, res) => {
     try {
         const { name, phone, password } = req.body;
@@ -130,6 +132,7 @@ app.post('/api/drivers', async (req, res) => {
     }
 });
 
+// تسجيل دخول المحطة
 app.post('/api/station/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
@@ -146,6 +149,33 @@ app.post('/api/station/login', async (req, res) => {
     }
 });
 
+// تغيير كلمة المرور للمحطة
+app.post('/api/station/change-password', async (req, res) => {
+    try {
+        const { phone, currentPassword, newPassword } = req.body;
+
+        const checkStation = await pool.query(
+            'SELECT id FROM stations WHERE phone = $1 AND password = $2',
+            [phone, currentPassword]
+        );
+
+        if (checkStation.rows.length === 0) {
+            return res.status(401).json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
+        }
+
+        await pool.query(
+            'UPDATE stations SET password = $1 WHERE phone = $2',
+            [newPassword, phone]
+        );
+
+        res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'خطأ أثناء تغيير كلمة المرور' });
+    }
+});
+
+// جلب الإحصائيات
 app.get('/api/station/stats', async (req, res) => {
     try {
         const recharged = await pool.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE action_type = 'شحن'");
@@ -174,6 +204,7 @@ app.get('/api/station/stats', async (req, res) => {
     }
 });
 
+// سجل الحركات
 app.get('/api/station/transactions', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM transactions ORDER BY id DESC LIMIT 30');
