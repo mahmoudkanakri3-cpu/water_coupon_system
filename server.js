@@ -14,12 +14,10 @@ const pool = new Pool({
 
 // ------------------- توجيه الصفحات -------------------
 
-// الصفحة الرئيسية (شاشة المحطة)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// شاشة الخصم والاستعلام
 app.get('/deduct', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'deduct.html'));
 });
@@ -29,8 +27,8 @@ app.get('/deduct', (req, res) => {
 // 1. الاستعلام عن رصيد الزبون
 app.get('/api/customers/:phone', async (req, res) => {
     try {
-        const { phone } = req.params;
-        const result = await pool.query('SELECT name, coupons FROM customers WHERE phone = $1', [phone]);
+        const phone = req.params.phone.trim();
+        const result = await pool.query('SELECT name, coupons FROM customers WHERE TRIM(phone) = $1', [phone]);
 
         if (result.rows.length > 0) {
             res.json({ success: true, name: result.rows[0].name, coupons: result.rows[0].coupons });
@@ -49,17 +47,21 @@ app.post('/api/deduct-coupon', async (req, res) => {
         const { customerPhone, driverPhone, driverPassword, amount } = req.body;
         const deductAmount = parseInt(amount) || 1;
 
-        // التحقق من الموزع من جدول drivers
+        const dPhone = String(driverPhone).trim();
+        const dPass = String(driverPassword).trim();
+        const cPhone = String(customerPhone).trim();
+
+        // التحقق من الموزع
         const driverCheck = await pool.query(
-            'SELECT name FROM drivers WHERE phone = $1 AND password = $2',
-            [driverPhone, driverPassword]
+            'SELECT name FROM drivers WHERE TRIM(phone) = $1 AND TRIM(password) = $2',
+            [dPhone, dPass]
         );
         if (driverCheck.rows.length === 0) {
             return res.status(401).json({ success: false, message: 'بيانات الموزع (رقم الهاتف أو كلمة المرور) غير صحيحة' });
         }
 
-        // التحقق من الزبون من جدول customers
-        const custCheck = await pool.query('SELECT id, name, coupons FROM customers WHERE phone = $1', [customerPhone]);
+        // التحقق من الزبون
+        const custCheck = await pool.query('SELECT id, name, coupons FROM customers WHERE TRIM(phone) = $1', [cPhone]);
         if (custCheck.rows.length === 0) {
             return res.status(404).json({ success: false, message: 'رقم الزبون غير مسجل في النظام' });
         }
@@ -73,10 +75,10 @@ app.post('/api/deduct-coupon', async (req, res) => {
         const newBalance = customer.coupons - deductAmount;
         await pool.query('UPDATE customers SET coupons = $1 WHERE id = $2', [newBalance, customer.id]);
 
-        // تسجيل العملية في جدول الحركات
+        // تسجيل العملية
         await pool.query(
             'INSERT INTO transactions (customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5)',
-            [customerPhone, customer.name, 'خصم', deductAmount, driverCheck.rows[0].name]
+            [cPhone, customer.name, 'خصم', deductAmount, driverCheck.rows[0].name]
         );
 
         res.json({
@@ -86,7 +88,7 @@ app.post('/api/deduct-coupon', async (req, res) => {
             newBalance: newBalance
         });
     } catch (err) {
-        console.error(err);
+        console.error('Error deducting coupons:', err);
         res.status(500).json({ success: false, message: 'خطأ أثناء تنفيذ الخصم' });
     }
 });
@@ -98,24 +100,30 @@ app.post('/api/customers', async (req, res) => {
     try {
         const { name, phone, coupons } = req.body;
         const addAmount = parseInt(coupons) || 0;
+        const cleanPhone = String(phone).trim();
+        const cleanName = String(name).trim();
 
-        const checkCust = await pool.query('SELECT id, coupons FROM customers WHERE phone = $1', [phone]);
+        if (!cleanPhone || !cleanName) {
+            return res.status(400).json({ success: false, message: 'يرجى إدخال اسم ورقم الزبون' });
+        }
+
+        const checkCust = await pool.query('SELECT id, coupons FROM customers WHERE TRIM(phone) = $1', [cleanPhone]);
 
         if (checkCust.rows.length > 0) {
-            const newCoupons = checkCust.rows[0].coupons + addAmount;
-            await pool.query('UPDATE customers SET coupons = $1, name = $2 WHERE phone = $3', [newCoupons, name, phone]);
+            const newCoupons = Number(checkCust.rows[0].coupons) + addAmount;
+            await pool.query('UPDATE customers SET coupons = $1, name = $2 WHERE id = $3', [newCoupons, cleanName, checkCust.rows[0].id]);
         } else {
-            await pool.query('INSERT INTO customers (name, phone, coupons) VALUES ($1, $2, $3)', [name, phone, addAmount]);
+            await pool.query('INSERT INTO customers (name, phone, coupons) VALUES ($1, $2, $3)', [cleanName, cleanPhone, addAmount]);
         }
 
         await pool.query(
             'INSERT INTO transactions (customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5)',
-            [phone, name, 'شحن', addAmount, 'المحطة']
+            [cleanPhone, cleanName, 'شحن', addAmount, 'المحطة']
         );
 
         res.json({ success: true, message: 'تم حفظ وشحن رصيد الزبون بنجاح' });
     } catch (err) {
-        console.error(err);
+        console.error('Error in /api/customers:', err);
         res.status(500).json({ success: false, message: 'خطأ أثناء إضافة/شحن الزبون' });
     }
 });
@@ -124,19 +132,29 @@ app.post('/api/customers', async (req, res) => {
 app.post('/api/drivers', async (req, res) => {
     try {
         const { name, phone, password } = req.body;
-        await pool.query('INSERT INTO drivers (name, phone, password) VALUES ($1, $2, $3)', [name, phone, password]);
+        const cleanPhone = String(phone).trim();
+        const cleanName = String(name).trim();
+        const cleanPassword = String(password).trim();
+
+        if (!cleanName || !cleanPhone || !cleanPassword) {
+            return res.status(400).json({ success: false, message: 'يرجى إدخال كافة بيانات الموزع' });
+        }
+
+        await pool.query('INSERT INTO drivers (name, phone, password) VALUES ($1, $2, $3)', [cleanName, cleanPhone, cleanPassword]);
         res.json({ success: true, message: 'تمت إضافة الموزع بنجاح' });
     } catch (err) {
-        console.error(err);
-        res.status(400).json({ success: false, message: 'رقم هاتف الموزع مسجل مسبقاً' });
+        console.error('Error adding driver:', err);
+        res.status(400).json({ success: false, message: 'رقم هاتف الموزع مسجل مسبقاً أو حدث خطأ' });
     }
 });
 
 // تسجيل دخول المحطة
 app.post('/api/station/login', async (req, res) => {
     try {
-        const { phone, password } = req.body;
-        const result = await pool.query('SELECT * FROM stations WHERE phone = $1 AND password = $2', [phone, password]);
+        const phone = String(req.body.phone).trim();
+        const password = String(req.body.password).trim();
+        
+        const result = await pool.query('SELECT * FROM stations WHERE TRIM(phone) = $1 AND TRIM(password) = $2', [phone, password]);
 
         if (result.rows.length > 0) {
             res.json({ success: true, station: result.rows[0] });
@@ -152,10 +170,12 @@ app.post('/api/station/login', async (req, res) => {
 // تغيير كلمة المرور للمحطة
 app.post('/api/station/change-password', async (req, res) => {
     try {
-        const { phone, currentPassword, newPassword } = req.body;
+        const phone = String(req.body.phone).trim();
+        const currentPassword = String(req.body.currentPassword).trim();
+        const newPassword = String(req.body.newPassword).trim();
 
         const checkStation = await pool.query(
-            'SELECT id FROM stations WHERE phone = $1 AND password = $2',
+            'SELECT id FROM stations WHERE TRIM(phone) = $1 AND TRIM(password) = $2',
             [phone, currentPassword]
         );
 
@@ -164,7 +184,7 @@ app.post('/api/station/change-password', async (req, res) => {
         }
 
         await pool.query(
-            'UPDATE stations SET password = $1 WHERE phone = $2',
+            'UPDATE stations SET password = $1 WHERE TRIM(phone) = $2',
             [newPassword, phone]
         );
 
