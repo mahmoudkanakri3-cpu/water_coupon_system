@@ -154,6 +154,15 @@
     <div id="toast"></div>
 
     <script>
+        // التحقق التلقائي من وجود الجلسة عند فتح الصفحة
+        window.onload = function() {
+            const savedStation = localStorage.getItem('stationSession');
+            if (savedStation) {
+                const station = JSON.parse(savedStation);
+                showDashboard(station.name);
+            }
+        };
+
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.innerText = message;
@@ -169,6 +178,13 @@
             document.getElementById('passwordModal').style.display = 'none';
         }
 
+        function showDashboard(stationName) {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+            document.getElementById('stationTitle').innerText = `🏬 ${stationName}`;
+            loadDashboardData();
+        }
+
         async function loginStation() {
             const phone = document.getElementById('stationPhone').value.trim();
             const password = document.getElementById('stationPassword').value.trim();
@@ -182,11 +198,14 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('dashboardSection').style.display = 'block';
-                    document.getElementById('stationTitle').innerText = `🏬 ${data.station.name}`;
+                    // حفظ الجلسة في المتصفح
+                    localStorage.setItem('stationSession', JSON.stringify({
+                        name: data.station.name,
+                        phone: phone
+                    }));
+                    
                     showToast('تم تسجيل الدخول بنجاح', 'success');
-                    loadDashboardData();
+                    showDashboard(data.station.name);
                 } else {
                     showToast(data.message, 'error');
                 }
@@ -196,6 +215,8 @@
         }
 
         function logout() {
+            // مسح الجلسة عند تسجيل الخروج
+            localStorage.removeItem('stationSession');
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('dashboardSection').style.display = 'none';
             showToast('تم تسجيل الخروج', 'success');
@@ -265,7 +286,10 @@
         async function changeStationPassword() {
             const currentPassword = document.getElementById('currentPass').value.trim();
             const newPassword = document.getElementById('newPass').value.trim();
-            const phone = document.getElementById('stationPhone').value.trim();
+            
+            // جلب رقم المحطة المسجل من الجلسة أو الحقل
+            const savedSession = localStorage.getItem('stationSession');
+            const phone = savedSession ? JSON.parse(savedSession).phone : document.getElementById('stationPhone').value.trim();
 
             if (!currentPassword || !newPassword) {
                 return showToast('يرجى ملء كافة الحقول', 'error');
@@ -283,7 +307,6 @@
                     showToast(data.message, 'success');
                     document.getElementById('currentPass').value = '';
                     document.getElementById('newPass').value = '';
-                    document.getElementById('stationPassword').value = newPassword;
                     closePasswordModal();
                 } else {
                     showToast(data.message, 'error');
