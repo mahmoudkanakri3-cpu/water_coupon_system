@@ -71,30 +71,26 @@ app.post('/api/station/change-password', async (req, res) => {
     }
 });
 
-// جلب إحصائيات المحطة
+// جلب إحصائيات المحطة المحددة فقط
 app.get('/api/station/:stationId/stats', async (req, res) => {
     try {
         const { stationId } = req.params;
 
-        // إجمالي الكوبونات المشحونة
         const rechargedRes = await pool.query(
             "SELECT COALESCE(SUM(amount), 0) AS total FROM transactions WHERE station_id = $1 AND action_type = 'شحن'",
             [stationId]
         );
 
-        // إجمالي الكوبونات المخصومة
         const deductedRes = await pool.query(
             "SELECT COALESCE(SUM(amount), 0) AS total FROM transactions WHERE station_id = $1 AND action_type = 'خصم'",
             [stationId]
         );
 
-        // رصيد الزبائن الحالي
         const balanceRes = await pool.query(
             'SELECT COALESCE(SUM(coupons), 0) AS total FROM customers WHERE station_id = $1',
             [stationId]
         );
 
-        // إحصائيات الموزعين
         const driversRes = await pool.query(
             `SELECT driver_name, COUNT(*) AS operations_count, COALESCE(SUM(amount), 0) AS total_deducted 
              FROM transactions 
@@ -119,7 +115,7 @@ app.get('/api/station/:stationId/stats', async (req, res) => {
     }
 });
 
-// جلب سجل حركات المحطة
+// جلب سجل حركات المحطة المحددة فقط
 app.get('/api/station/:stationId/transactions', async (req, res) => {
     try {
         const { stationId } = req.params;
@@ -158,20 +154,20 @@ app.get('/api/customers/:phone', async (req, res) => {
     }
 });
 
-// إضافة أو شحن رصيد زبون
+// إضافة أو شحن رصيد زبون محدد بمحطته الحالية
 app.post('/api/customers', async (req, res) => {
     try {
         const { stationId, name, phone, coupons } = req.body;
         const cleanPhone = String(phone || '').trim();
         const cleanName = String(name || '').trim();
         const amount = parseInt(coupons) || 0;
-        const sId = parseInt(stationId) || 1;
+        const sId = parseInt(stationId);
 
-        if (!cleanPhone || !cleanName) {
-            return res.status(400).json({ success: false, message: 'بيانات غير مكتملة' });
+        if (!sId || !cleanPhone || !cleanName) {
+            return res.status(400).json({ success: false, message: 'بيانات غير مكتملة أو معرف المحطة مفقود' });
         }
 
-        // البحث إذا كان الزبون موجوداً مسبقاً
+        // البحث إذا كان الزبون موجوداً بنفس المحطة
         const existing = await pool.query(
             'SELECT * FROM customers WHERE TRIM(phone) = $1 AND station_id = $2',
             [cleanPhone, sId]
@@ -179,14 +175,12 @@ app.post('/api/customers', async (req, res) => {
 
         let customer;
         if (existing.rows.length > 0) {
-            // تحديث الرصيد للزبون الحالي
             const updated = await pool.query(
                 'UPDATE customers SET coupons = coupons + $1, name = $2 WHERE id = $3 RETURNING *',
                 [amount, cleanName, existing.rows[0].id]
             );
             customer = updated.rows[0];
         } else {
-            // إضافة زبون جديد
             const inserted = await pool.query(
                 'INSERT INTO customers (station_id, name, phone, coupons) VALUES ($1, $2, $3, $4) RETURNING *',
                 [sId, cleanName, cleanPhone, amount]
@@ -194,7 +188,7 @@ app.post('/api/customers', async (req, res) => {
             customer = inserted.rows[0];
         }
 
-        // تسجيل حركة الشحن في السجل
+        // تسجيل الحركة للمحطة المحددة
         await pool.query(
             'INSERT INTO transactions (station_id, customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5, $6)',
             [sId, customer.phone, customer.name, 'شحن', amount, 'المحطة']
@@ -211,19 +205,19 @@ app.post('/api/customers', async (req, res) => {
     }
 });
 
-// ==================== 3. مسارات الموزعين والخصم (DRIVERS & DEDUCT) ====================
+// ==================== 3. مسارات الموزعين والخصم المخصص ====================
 
 // إضافة موزع جديد للمحطة
 app.post('/api/drivers', async (req, res) => {
     try {
         const { stationId, name, phone, password } = req.body;
-        const sId = parseInt(stationId) || 1;
+        const sId = parseInt(stationId);
         const cleanName = String(name || '').trim();
         const cleanPhone = String(phone || '').trim();
         const cleanPass = String(password || '').trim();
 
-        if (!cleanName || !cleanPhone || !cleanPass) {
-            return res.status(400).json({ success: false, message: 'يرجى ملء جميع الحقول' });
+        if (!sId || !cleanName || !cleanPhone || !cleanPass) {
+            return res.status(400).json({ success: false, message: 'يرجى ملء جميع الحقول المطلوبة' });
         }
 
         await pool.query(
@@ -241,7 +235,7 @@ app.post('/api/drivers', async (req, res) => {
     }
 });
 
-// خصم كوبونات من الزبون (بواسطة الموزع) - دعم تحديد الكمية
+// خصم كوبونات من الزبون (مشترط تطابق المحطة للموزع والزبون)
 app.post('/api/deduct', async (req, res) => {
     try {
         const { driverPhone, driverPassword, customerPhone, amount } = req.body;
@@ -250,7 +244,7 @@ app.post('/api/deduct', async (req, res) => {
         const cPhone = String(customerPhone || '').trim();
         const deductAmount = Math.max(1, parseInt(amount) || 1);
 
-        // 1. التحقق من الموزع
+        // 1. التحقق من الموزع ومعرفة محطته
         const driverRes = await pool.query(
             'SELECT * FROM drivers WHERE TRIM(phone) = $1 AND TRIM(password) = $2',
             [dPhone, dPass]
@@ -262,14 +256,17 @@ app.post('/api/deduct', async (req, res) => {
 
         const driver = driverRes.rows[0];
 
-        // 2. التحقق من الزبون ورصيده
+        // 2. التحقق من الزبون وضمان انتمائه لنفس محطة الموزع
         const customerRes = await pool.query(
-            'SELECT * FROM customers WHERE TRIM(phone) = $1',
-            [cPhone]
+            'SELECT * FROM customers WHERE TRIM(phone) = $1 AND station_id = $2',
+            [cPhone, driver.station_id]
         );
 
         if (customerRes.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'الزبون غير موجود' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'الزبون غير موجود أو غير مسجل لدى محطة هذا الموزع' 
+            });
         }
 
         const customer = customerRes.rows[0];
@@ -287,10 +284,10 @@ app.post('/api/deduct', async (req, res) => {
             [deductAmount, customer.id]
         );
 
-        // 4. تسجيل عملية الخصم
+        // 4. تسجيل العملية بنفس station_id التابعة للموزع
         await pool.query(
             'INSERT INTO transactions (station_id, customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5, $6)',
-            [driver.station_id || customer.station_id || 1, customer.phone, customer.name, 'خصم', deductAmount, driver.name]
+            [driver.station_id, customer.phone, customer.name, 'خصم', deductAmount, driver.name]
         );
 
         res.json({
