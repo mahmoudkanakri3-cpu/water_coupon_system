@@ -89,6 +89,13 @@
 
                 if (res.ok && data.success) {
                     showToast(data.message, 'success');
+                    
+                    // تحديث الرصيد في الشاشة فوراً بعد الخصم
+                    document.getElementById('resultArea').innerHTML = `
+                        <h1 style="font-size: 3rem; color: #007bf5; margin: 10px 0;">${data.newBalance}</h1>
+                        <p style="font-size: 1.1rem; color: #555;">مرحباً <strong>${data.customerName}</strong> - كوبون متبقي</p>
+                    `;
+
                     document.getElementById('custPhoneDeduct').value = '';
                 } else {
                     showToast(data.message || 'فشلت عملية الخصم', 'error');
