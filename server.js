@@ -1,6 +1,7 @@
 const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
+const twilio = require('twilio');
 
 const app = express();
 app.use(express.json());
@@ -11,6 +12,43 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
+
+// ============================================================
+// إعدادات Twilio لإرسال إشعارات الواتساب
+// ============================================================
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = twilio(accountSid, authToken);
+
+// دالة تحويل أرقام الهواتف للصيغة الدولية للأردن تلقائياً (+962)
+function formatJordanPhone(phone) {
+    let clean = String(phone || '').trim();
+    if (clean.startsWith('0')) {
+        clean = '+962' + clean.substring(1);
+    } else if (!clean.startsWith('+')) {
+        clean = '+962' + clean;
+    }
+    return clean;
+}
+
+// دالة إرسال إشعارات الواتساب
+async function sendWhatsAppNotification(toPhone, message) {
+    try {
+        if (!accountSid || !authToken) {
+            console.log('Twilio credentials missing, notification skipped.');
+            return;
+        }
+        const formattedPhone = formatJordanPhone(toPhone);
+        await client.messages.create({
+            from: 'whatsapp:+14155238886', // رقم Sandbox الافتراضي لـ Twilio
+            to: `whatsapp:${formattedPhone}`,
+            body: message
+        });
+        console.log(`WhatsApp notification sent to ${formattedPhone}`);
+    } catch (err) {
+        console.error('Twilio WhatsApp Error:', err.message);
+    }
+}
 
 // الصفحة الرئيسية لشاشة الخصم والاستعلام
 app.get('/deduct', (req, res) => {
@@ -194,6 +232,10 @@ app.post('/api/customers', async (req, res) => {
             [sId, customer.phone, customer.name, 'شحن', amount, 'المحطة']
         );
 
+        // إرسال إشعار الواتساب عند الشحن
+        const rechargeMsg = `مرحباً ${customer.name}، تم شحن ${amount} كوبون لحسابك بنجاح. رصيدك الحالي هو: ${customer.coupons} كوبون.`;
+        sendWhatsAppNotification(customer.phone, rechargeMsg);
+
         res.json({
             success: true,
             message: `تم شحن ${amount} كوبون للزبون ${customer.name} بنجاح`,
@@ -244,7 +286,7 @@ app.post('/api/deduct', async (req, res) => {
         const cPhone = String(customerPhone || '').trim();
         const deductAmount = Math.max(1, parseInt(amount) || 1);
 
-        // 1. التحقق من الموزع ومعرفة محطته
+        // 1. التحقق من الموزع ومعرفة محطه
         const driverRes = await pool.query(
             'SELECT * FROM drivers WHERE TRIM(phone) = $1 AND TRIM(password) = $2',
             [dPhone, dPass]
@@ -289,6 +331,10 @@ app.post('/api/deduct', async (req, res) => {
             'INSERT INTO transactions (station_id, customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5, $6)',
             [driver.station_id, customer.phone, customer.name, 'خصم', deductAmount, driver.name]
         );
+
+        // إرسال إشعار الواتساب عند الخصم
+        const deductMsg = `مرحباً ${customer.name}، تم خصم ${deductAmount} كوبون بواسطة الموزع (${driver.name}). الرصيد المتبقي لك هو: ${updatedCustomer.rows[0].coupons} كوبون.`;
+        sendWhatsAppNotification(customer.phone, deductMsg);
 
         res.json({
             success: true,
