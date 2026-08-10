@@ -24,9 +24,9 @@ const client = twilio(accountSid, authToken);
 function formatJordanPhone(phone) {
     let clean = String(phone || '').trim();
     if (clean.startsWith('0')) {
-        clean = '+962' + clean.substring(1);
+        clean = '+9620' + clean.substring(1);
     } else if (!clean.startsWith('+')) {
-        clean = '+962' + clean;
+        clean = '+9620' + clean;
     }
     return clean;
 }
