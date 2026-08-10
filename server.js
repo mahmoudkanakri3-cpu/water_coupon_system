@@ -12,9 +12,26 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// ------------------- توجيه الصفحات -------------------
+
+// الصفحة الرئيسية (شاشة المحطة)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'station.html'));
+});
+
+// شاشة الخصم والاستعلام
+app.get('/deduct', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// مسار فرعي لشاشة المحطة للتوافق
+app.get('/station', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'station.html'));
+});
+
 // ------------------- API الزبائن -------------------
 
-// 1. الاستعلام عن رصيد زبون
+// الاستعلام عن رصيد زبون (Query Param)
 app.get('/api/check-balance', async (req, res) => {
     try {
         const { phone } = req.query;
@@ -31,7 +48,24 @@ app.get('/api/check-balance', async (req, res) => {
     }
 });
 
-// 2. خصم كوبونات بواسطة الموزع
+// الاستعلام عن رصيد زبون (URL Param)
+app.get('/api/customers/:phone', async (req, res) => {
+    try {
+        const { phone } = req.params;
+        const result = await pool.query('SELECT name, coupons FROM customers WHERE phone = $1', [phone]);
+
+        if (result.rows.length > 0) {
+            res.json({ success: true, name: result.rows[0].name, coupons: result.rows[0].coupons });
+        } else {
+            res.status(404).json({ success: false, message: 'الزبون غير موجود' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
+    }
+});
+
+// خصم كوبونات بواسطة الموزع
 app.post('/api/deduct-coupon', async (req, res) => {
     try {
         const { customerPhone, driverPhone, driverPassword, amount } = req.body;
@@ -61,7 +95,7 @@ app.post('/api/deduct-coupon', async (req, res) => {
         const newBalance = customer.coupons - deductAmount;
         await pool.query('UPDATE customers SET coupons = $1 WHERE id = $2', [newBalance, customer.id]);
 
-        // تسجيل الحركة في الجدول
+        // تسجيل الحركة
         await pool.query(
             'INSERT INTO transactions (customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5)',
             [customerPhone, customer.name, 'خصم', deductAmount, driverCheck.rows[0].name]
@@ -79,9 +113,9 @@ app.post('/api/deduct-coupon', async (req, res) => {
     }
 });
 
-// ------------------- API المحطة والإدارة -------------------
+// ------------------- API المحطة الإدارية -------------------
 
-// 3. إضافة زبون جديد أو شحن رصيده
+// إضافة زبون جديد أو شحن رصيده
 app.post('/api/customers', async (req, res) => {
     try {
         const { name, phone, coupons } = req.body;
@@ -108,7 +142,7 @@ app.post('/api/customers', async (req, res) => {
     }
 });
 
-// 4. إضافة موزع جديد
+// إضافة موزع جديد
 app.post('/api/drivers', async (req, res) => {
     try {
         const { name, phone, password } = req.body;
@@ -120,7 +154,7 @@ app.post('/api/drivers', async (req, res) => {
     }
 });
 
-// 5. تسجيل دخول المحطة
+// تسجيل دخول المحطة
 app.post('/api/station/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
@@ -137,7 +171,7 @@ app.post('/api/station/login', async (req, res) => {
     }
 });
 
-// 6. إحصائيات لوحة التحكم
+// إحصائيات لوحة التحكم
 app.get('/api/station/stats', async (req, res) => {
     try {
         const recharged = await pool.query("SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE action_type = 'شحن'");
@@ -166,7 +200,7 @@ app.get('/api/station/stats', async (req, res) => {
     }
 });
 
-// 7. سجل الحركات
+// سجل الحركات
 app.get('/api/station/transactions', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM transactions ORDER BY id DESC LIMIT 30');
@@ -175,11 +209,6 @@ app.get('/api/station/transactions', async (req, res) => {
         console.error(err);
         res.status(500).json({ success: false, message: 'خطأ في جلب السجلات' });
     }
-});
-
-// توجيه الصفحات
-app.get('/station', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'station.html'));
 });
 
 const PORT = process.env.PORT || 10000;

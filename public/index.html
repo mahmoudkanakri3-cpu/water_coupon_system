@@ -3,44 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام كوبونات الماء</title>
+    <title>كوبونات الماء - الاستعلام والخصم</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .nav-back-btn {
+            display: inline-block;
+            background-color: #6c757d;
+            color: #ffffff !important;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: background-color 0.2s ease;
+        }
+        .nav-back-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
 </head>
 <body>
-    <div class="container" style="max-width: 600px;">
-        <h1>💧 كوبونات الماء</h1>
+    <div class="container">
+        
+        <!-- زر العودة للشاشة الرئيسية (المحطة) -->
+        <div style="text-align: right;">
+            <a href="/" class="nav-back-btn">← العودة لشاشة المحطة</a>
+        </div>
 
-        <!-- قسم الاستعلام -->
-        <div class="card" style="background-color: #e0f7fa;">
-            <h3>استعلام عن رصيد الكوبونات</h3>
-            <input type="tel" id="checkPhone" placeholder="أدخل رقم هاتف الزبون">
+        <h1 style="text-align: center; color: #007bf5; margin-bottom: 20px;">💧 كوبونات الماء</h1>
+
+        <!-- قسم استعلام رصيد الكوبونات -->
+        <div class="card">
+            <h3 style="text-align: center; color: #007bf5;">استعلام عن رصيد الكوبونات</h3>
+            <input type="tel" id="searchPhone" placeholder="أدخل رقم هاتف الزبون">
             <button class="btn" onclick="checkBalance()">عرض الرصيد</button>
 
-            <div id="balanceResult" style="margin-top: 15px; display: none; text-align: center;">
-                <h2 id="balanceCount" style="font-size: 2.8rem; color: #0077b6; margin: 5px 0;">0</h2>
-                <p id="welcomeMsg" style="color: #555; font-weight: 500;"></p>
-            </div>
+            <div id="resultArea" style="text-align: center; margin-top: 15px;"></div>
         </div>
 
-        <!-- قسم الخصم -->
+        <!-- قسم خصم الكوبونات (للموزعين) -->
         <div class="card">
-            <h3>خصم كوبون (ل للموزع)</h3>
-            
+            <h3 style="text-align: center; color: #28a745;">خصم كوبون (للموزع)</h3>
             <input type="tel" id="driverPhone" placeholder="رقم هاتف الموزع">
             <input type="password" id="driverPassword" placeholder="كلمة المرور">
-            <input type="tel" id="customerPhone" placeholder="رقم هاتف الزبون">
-            <input type="number" id="couponCount" value="1" min="1" placeholder="عدد الكوبونات المراد خصمها">
-
+            <input type="tel" id="custPhoneDeduct" placeholder="رقم هاتف الزبون">
+            <input type="number" id="deductAmount" placeholder="عدد الكوبونات المراد خصمها" value="1">
             <button class="btn btn-success" onclick="deductCoupons()">تسجيل خصم الكوبونات</button>
         </div>
+
     </div>
 
     <div id="toast"></div>
 
     <script>
-        // ترك المسار فارغاً ليعتمد تلقائياً على نفس سيرفر Render
-        const API_BASE_URL = '';
-
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.innerText = message;
@@ -49,28 +64,21 @@
         }
 
         async function checkBalance() {
-            const phone = document.getElementById('checkPhone').value.trim();
-            const balanceResult = document.getElementById('balanceResult');
-            const balanceCount = document.getElementById('balanceCount');
-            const welcomeMsg = document.getElementById('welcomeMsg');
-
-            if (!phone) {
-                showToast('يرجى إدخال رقم الهاتف', 'error');
-                return;
-            }
+            const phone = document.getElementById('searchPhone').value.trim();
+            if (!phone) return showToast('يرجى إدخال رقم الهاتف', 'error');
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/customers/${phone}`);
+                const res = await fetch(`/api/customers/${phone}`);
                 const data = await res.json();
 
-                if (data.success) {
-                    balanceResult.style.display = 'block';
-                    balanceCount.innerText = data.customer.coupons_balance;
-                    welcomeMsg.innerText = `مرحباً ${data.customer.name} - كوبون متبقي`;
-                    showToast('تم جلب البيانات بنجاح', 'success');
+                if (res.ok && data.success) {
+                    document.getElementById('resultArea').innerHTML = `
+                        <h1 style="font-size: 3rem; color: #007bf5; margin: 10px 0;">${data.coupons}</h1>
+                        <p style="font-size: 1.1rem; color: #555;">مرحباً <strong>${data.name}</strong> - كوبون متبقي</p>
+                    `;
                 } else {
-                    balanceResult.style.display = 'none';
-                    showToast(data.message, 'error');
+                    document.getElementById('resultArea').innerHTML = '';
+                    showToast(data.message || 'الزبون غير موجود', 'error');
                 }
             } catch (err) {
                 showToast('تعذر الاتصال بالسيرفر', 'error');
@@ -80,34 +88,27 @@
         async function deductCoupons() {
             const driverPhone = document.getElementById('driverPhone').value.trim();
             const driverPassword = document.getElementById('driverPassword').value.trim();
-            const customerPhone = document.getElementById('customerPhone').value.trim();
-            const countInput = document.getElementById('couponCount').value;
-            const count = parseInt(countInput, 10) || 1;
+            const customerPhone = document.getElementById('custPhoneDeduct').value.trim();
+            const amount = document.getElementById('deductAmount').value;
 
             if (!driverPhone || !driverPassword || !customerPhone) {
-                showToast('يرجى تعبئة جميع الحقول المطلوبة', 'error');
-                return;
+                return showToast('يرجى ملء جميع الحقول المطلوب', 'error');
             }
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/deduct-coupon`, {
+                const res = await fetch('/api/deduct-coupon', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ driverPhone, driverPassword, customerPhone, count })
+                    body: JSON.stringify({ driverPhone, driverPassword, customerPhone, amount })
                 });
 
                 const data = await res.json();
 
-                if (data.success) {
+                if (res.ok && data.success) {
                     showToast(data.message, 'success');
-                    document.getElementById('customerPhone').value = '';
-                    document.getElementById('couponCount').value = '1';
-
-                    if (document.getElementById('checkPhone').value.trim() === customerPhone) {
-                        checkBalance();
-                    }
+                    document.getElementById('custPhoneDeduct').value = '';
                 } else {
-                    showToast(data.message, 'error');
+                    showToast(data.message || 'فشلت عملية الخصم', 'error');
                 }
             } catch (err) {
                 showToast('تعذر الاتصال بالسيرفر', 'error');
