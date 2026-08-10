@@ -36,7 +36,7 @@ app.get('/api/customers/:phone', async (req, res) => {
             res.status(404).json({ success: false, message: 'الزبون غير مسجل في النظام' });
         }
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching customer:', err.message);
         res.status(500).json({ success: false, message: 'خطأ في الاتصال بالخادم' });
     }
 });
@@ -92,7 +92,7 @@ app.post('/api/deduct-coupon', async (req, res) => {
         });
     } catch (err) {
         console.error('Error deducting coupons:', err.message);
-        res.status(500).json({ success: false, message: 'خطأ أثناء تنفيذ الخصم' });
+        res.status(500).json({ success: false, message: 'خطأ أثناء تنفيذ الخصم: ' + err.message });
     }
 });
 
@@ -120,6 +120,7 @@ app.post('/api/customers', async (req, res) => {
             await pool.query('INSERT INTO customers (name, phone, coupons) VALUES ($1, $2, $3)', [cleanName, cleanPhone, addAmount]);
         }
 
+        // تسجيل الحركة
         await pool.query(
             'INSERT INTO transactions (customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5)',
             [cleanPhone, cleanName, 'شحن', addAmount, 'المحطة']
@@ -128,7 +129,7 @@ app.post('/api/customers', async (req, res) => {
         res.json({ success: true, message: 'تم حفظ وشحن رصيد الزبون بنجاح' });
     } catch (err) {
         console.error('Error in /api/customers:', err.message);
-        res.status(500).json({ success: false, message: 'خطأ أثناء إضافة/شحن الزبون' });
+        res.status(500).json({ success: false, message: 'خطأ أثناء إضافة/شحن الزبون: ' + err.message });
     }
 });
 
@@ -166,7 +167,7 @@ app.post('/api/station/login', async (req, res) => {
             res.status(401).json({ success: false, message: 'بيانات دخول المحطة غير صحيحة' });
         }
     } catch (err) {
-        console.error(err);
+        console.error('Error in station login:', err.message);
         res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
     }
 });
@@ -194,7 +195,7 @@ app.post('/api/station/change-password', async (req, res) => {
 
         res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
     } catch (err) {
-        console.error(err);
+        console.error('Error changing password:', err.message);
         res.status(500).json({ success: false, message: 'خطأ أثناء تغيير كلمة المرور' });
     }
 });
@@ -207,7 +208,7 @@ app.get('/api/station/stats', async (req, res) => {
         const balance = await pool.query("SELECT COALESCE(SUM(coupons), 0) as total FROM customers");
 
         const driverStats = await pool.query(`
-            SELECT driver_name, COUNT(*) as operations_count, SUM(amount) as total_deducted 
+            SELECT driver_name, COUNT(*) as operations_count, COALESCE(SUM(amount), 0) as total_deducted 
             FROM transactions 
             WHERE action_type = 'خصم' 
             GROUP BY driver_name
@@ -216,14 +217,14 @@ app.get('/api/station/stats', async (req, res) => {
         res.json({
             success: true,
             stats: {
-                totalRecharged: recharged.rows[0].total,
-                totalDeducted: deducted.rows[0].total,
-                totalBalance: balance.rows[0].total,
+                totalRecharged: parseInt(recharged.rows[0].total, 10),
+                totalDeducted: parseInt(deducted.rows[0].total, 10),
+                totalBalance: parseInt(balance.rows[0].total, 10),
                 driverStats: driverStats.rows
             }
         });
     } catch (err) {
-        console.error(err);
+        console.error('Error in stats:', err.message);
         res.status(500).json({ success: false, message: 'خطأ في جلب الإحصائيات' });
     }
 });
@@ -234,7 +235,7 @@ app.get('/api/station/transactions', async (req, res) => {
         const result = await pool.query('SELECT * FROM transactions ORDER BY id DESC LIMIT 30');
         res.json({ success: true, transactions: result.rows });
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching transactions:', err.message);
         res.status(500).json({ success: false, message: 'خطأ في جلب السجلات' });
     }
 });
