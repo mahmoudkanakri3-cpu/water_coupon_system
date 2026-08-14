@@ -50,8 +50,12 @@ async function sendWhatsAppNotification(toPhone, message) {
     }
 }
 
-// الصفحة الرئيسية لشاشة الخصم والاستعلام
+// توجيهات الصفحة لشاشة الخصم/الموزع
 app.get('/deduct', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'deduct.html'));
+});
+
+app.get('/driver.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'deduct.html'));
 });
 
@@ -80,32 +84,26 @@ app.post('/api/station/login', async (req, res) => {
     }
 });
 
-// تغيير كلمة مرور المحطة
-app.post('/api/station/change-password', async (req, res) => {
+// إعادة تعيين / تغيير كلمة مرور المحطة
+app.post('/api/station/reset-password', async (req, res) => {
     try {
-        const { phone, currentPassword, newPassword } = req.body;
-        const cPhone = String(phone || '').trim();
-        const cPass = String(currentPassword || '').trim();
+        const { stationId, newPassword } = req.body;
+        const sId = parseInt(stationId);
         const nPass = String(newPassword || '').trim();
 
-        const checkStation = await pool.query(
-            'SELECT id FROM stations WHERE TRIM(phone) = $1 AND TRIM(password) = $2',
-            [cPhone, cPass]
-        );
-
-        if (checkStation.rows.length === 0) {
-            return res.status(401).json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
+        if (!sId || !nPass) {
+            return res.status(400).json({ success: false, message: 'بيانات غير مكتملة' });
         }
 
         await pool.query(
             'UPDATE stations SET password = $1 WHERE id = $2',
-            [nPass, checkStation.rows[0].id]
+            [nPass, sId]
         );
 
-        res.json({ success: true, message: 'تم تحديث كلمة المرور بنجاح' });
+        res.json({ success: true, message: 'تم تحديث كلمة مرور المحطة بنجاح' });
     } catch (err) {
-        console.error('Error changing password:', err.message);
-        res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
+        console.error('Error resetting station password:', err.message);
+        res.status(500).json({ success: false, message: 'خطأ في السيرفر أثناء تحديث كلمة المرور' });
     }
 });
 
@@ -168,6 +166,21 @@ app.get('/api/station/:stationId/transactions', async (req, res) => {
     }
 });
 
+// جلب خلاصة وأرصدة زبائن المحطة
+app.get('/api/station/:stationId/customers-summary', async (req, res) => {
+    try {
+        const { stationId } = req.params;
+        const result = await pool.query(
+            'SELECT * FROM customers WHERE station_id = $1 ORDER BY id DESC',
+            [stationId]
+        );
+        res.json({ success: true, customers: result.rows });
+    } catch (err) {
+        console.error('Error fetching customers summary:', err.message);
+        res.status(500).json({ success: false, message: 'خطأ في جلب قائمة الزبائن' });
+    }
+});
+
 // ==================== 2. مسارات الزبائن (CUSTOMERS) ====================
 
 // استعلام عن رصيد زبون برقم الهاتف
@@ -205,7 +218,6 @@ app.post('/api/customers', async (req, res) => {
             return res.status(400).json({ success: false, message: 'بيانات غير مكتملة أو معرف المحطة مفقود' });
         }
 
-        // البحث إذا كان الزبون موجوداً بنفس المحطة
         const existing = await pool.query(
             'SELECT * FROM customers WHERE TRIM(phone) = $1 AND station_id = $2',
             [cleanPhone, sId]
@@ -226,13 +238,11 @@ app.post('/api/customers', async (req, res) => {
             customer = inserted.rows[0];
         }
 
-        // تسجيل الحركة للمحطة المحددة
         await pool.query(
             'INSERT INTO transactions (station_id, customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5, $6)',
             [sId, customer.phone, customer.name, 'شحن', amount, 'المحطة']
         );
 
-        // إرسال إشعار الواتساب عند الشحن
         const rechargeMsg = `مرحباً ${customer.name}، تم شحن ${amount} كوبون لحسابك بنجاح. رصيدك الحالي هو: ${customer.coupons} كوبون.`;
         sendWhatsAppNotification(customer.phone, rechargeMsg);
 
@@ -277,7 +287,35 @@ app.post('/api/drivers', async (req, res) => {
     }
 });
 
-// خصم كوبونات من الزبون (مشترط تطابق المحطة للموزع والزبون)
+// إعادة تعيين كلمة مرور الموزع
+app.post('/api/driver/reset-password', async (req, res) => {
+    try {
+        const { stationId, driverPhone, newPassword } = req.body;
+        const sId = parseInt(stationId);
+        const dPhone = String(driverPhone || '').trim();
+        const nPass = String(newPassword || '').trim();
+
+        if (!sId || !dPhone || !nPass) {
+            return res.status(400).json({ success: false, message: 'يرجى إدخال رقم هاتف الموزع وكلمة المرور الجديدة' });
+        }
+
+        const result = await pool.query(
+            'UPDATE drivers SET password = $1 WHERE TRIM(phone) = $2 AND station_id = $3',
+            [nPass, dPhone, sId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, message: 'لم يتم العثور على موزع بهذا الرقم في محطتك' });
+        }
+
+        res.json({ success: true, message: 'تم تحديث كلمة مرور الموزع بنجاح' });
+    } catch (err) {
+        console.error('Error resetting driver password:', err.message);
+        res.status(500).json({ success: false, message: 'خطأ في السيرفر أثناء تحديث كلمة المرور' });
+    }
+});
+
+// خصم كوبونات من الزبون
 app.post('/api/deduct', async (req, res) => {
     try {
         const { driverPhone, driverPassword, customerPhone, amount } = req.body;
@@ -286,7 +324,6 @@ app.post('/api/deduct', async (req, res) => {
         const cPhone = String(customerPhone || '').trim();
         const deductAmount = Math.max(1, parseInt(amount) || 1);
 
-        // 1. التحقق من الموزع ومعرفة محطه
         const driverRes = await pool.query(
             'SELECT * FROM drivers WHERE TRIM(phone) = $1 AND TRIM(password) = $2',
             [dPhone, dPass]
@@ -298,7 +335,6 @@ app.post('/api/deduct', async (req, res) => {
 
         const driver = driverRes.rows[0];
 
-        // 2. التحقق من الزبون وضمان انتمائه لنفس محطة الموزع
         const customerRes = await pool.query(
             'SELECT * FROM customers WHERE TRIM(phone) = $1 AND station_id = $2',
             [cPhone, driver.station_id]
@@ -320,19 +356,16 @@ app.post('/api/deduct', async (req, res) => {
             });
         }
 
-        // 3. خصم الكوبونات
         const updatedCustomer = await pool.query(
             'UPDATE customers SET coupons = coupons - $1 WHERE id = $2 RETURNING *',
             [deductAmount, customer.id]
         );
 
-        // 4. تسجيل العملية بنفس station_id التابعة للموزع
         await pool.query(
             'INSERT INTO transactions (station_id, customer_phone, customer_name, action_type, amount, driver_name) VALUES ($1, $2, $3, $4, $5, $6)',
             [driver.station_id, customer.phone, customer.name, 'خصم', deductAmount, driver.name]
         );
 
-        // إرسال إشعار الواتساب عند الخصم
         const deductMsg = `مرحباً ${customer.name}، تم خصم ${deductAmount} كوبون بواسطة الموزع (${driver.name}). الرصيد المتبقي لك هو: ${updatedCustomer.rows[0].coupons} كوبون.`;
         sendWhatsAppNotification(customer.phone, deductMsg);
 
