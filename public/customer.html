@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابي - رصيد الكوبونات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0284c7; --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --border: #e2e8f0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; }
+        .card { background: var(--card); max-width: 450px; margin: 20px auto; padding: 24px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .balance-box { background: #e0f2fe; border: 1px solid #bae6fd; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; }
+        .balance-val { font-size: 36px; font-weight: 800; color: var(--primary); }
+        input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 16px; }
+        button { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: right; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="loginCard">
+        <h2 style="text-align: center; margin-bottom: 16px;">💧 الاستعلام عن رصيد الكوبونات</h2>
+        <input type="tel" id="phoneInput" placeholder="أدخل رقم هاتفك (07XXXXXXXX)">
+        <button onclick="checkBalance()">عرض الرصيد</button>
+    </div>
+
+    <div class="card" id="detailsCard" style="display: none;">
+        <h3 id="custNameTitle">مرحباً</h3>
+        <div class="balance-box">
+            <div>رصيدك الحالي</div>
+            <div class="balance-val" id="custCouponsVal">0</div>
+            <div>كوبون</div>
+        </div>
+
+        <h4>آخر الحركات:</h4>
+        <table>
+            <thead>
+                <tr><th>التاريخ</th><th>العملية</th><th>الكمية</th></tr>
+            </thead>
+            <tbody id="custHistory"></tbody>
+        </table>
+        <button onclick="location.reload()" style="background:#64748b; margin-top:16px;">خروج</button>
+    </div>
+
+    <script>
+        async function checkBalance() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if(!phone) return alert('يرجى إدخال رقم الهاتف');
+
+            const res = await fetch(`/api/customers/${phone}`);
+            const data = await res.json();
+
+            if(data.success) {
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('detailsCard').style.display = 'block';
+                document.getElementById('custNameTitle').innerText = `مرحباً، ${data.customer.name}`;
+                document.getElementById('custCouponsVal').innerText = data.customer.coupons;
+                
+                // جلب سجل الحركات للزبون
+                loadCustomerHistory(phone);
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function loadCustomerHistory(phone) {
+            const res = await fetch(`/api/customer/history/${phone}`);
+            const data = await res.json();
+            const tbody = document.getElementById('custHistory');
+            tbody.innerHTML = '';
+            if(data.success && data.history.length > 0) {
+                data.history.forEach(h => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${new Date(h.created_at).toLocaleDateString('ar-JO')}</td>
+                            <td>${h.action_type}</td>
+                            <td><b>${h.amount}</b></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا يوجد سجل حركات</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>

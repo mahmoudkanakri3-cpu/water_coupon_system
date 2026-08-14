@@ -59,6 +59,11 @@ app.get('/driver.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'deduct.html'));
 });
 
+// توجيه صفحة الزبون
+app.get('/customer', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'customer.html'));
+});
+
 // ==================== 1. مسارات المحطة (STATIONS) ====================
 
 // تسجيل دخول المحطة
@@ -202,6 +207,24 @@ app.get('/api/customers/:phone', async (req, res) => {
     } catch (err) {
         console.error('Error searching customer:', err.message);
         res.status(500).json({ success: false, message: 'خطأ أثناء البحث عن الزبون' });
+    }
+});
+
+// جلب سجل حركات زبون معين عبر رقم الهاتف (جديد)
+app.get('/api/customer/history/:phone', async (req, res) => {
+    try {
+        const { phone } = req.params;
+        const cleanPhone = String(phone || '').trim();
+
+        const result = await pool.query(
+            'SELECT action_type, amount, created_at FROM transactions WHERE TRIM(customer_phone) = $1 ORDER BY created_at DESC LIMIT 15',
+            [cleanPhone]
+        );
+
+        res.json({ success: true, history: result.rows });
+    } catch (err) {
+        console.error('Error fetching customer history:', err.message);
+        res.status(500).json({ success: false, message: 'خطأ أثناء جلب السجل' });
     }
 });
 
