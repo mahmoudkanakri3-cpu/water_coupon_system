@@ -123,10 +123,11 @@
             gap: 12px;
             border-bottom: 2px solid var(--border);
             margin-bottom: 24px;
+            overflow-x: auto;
         }
 
         .tab-btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             background: none;
             border: none;
             font-size: 16px;
@@ -136,6 +137,7 @@
             border-bottom: 3px solid transparent;
             margin-bottom: -2px;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .tab-btn.active {
@@ -292,18 +294,18 @@
         </nav>
 
         <div class="container">
-            <!-- كروت الإحصائيات -->
+            <!-- كروت الإحصائيات الشاملة -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="title">إجمالي الشحن</div>
+                    <div class="title">إجمالي الشحن (الكلي)</div>
                     <div class="value" id="statRecharged">0 <span class="unit">كوبون</span></div>
                 </div>
                 <div class="stat-card">
-                    <div class="title">إجمالي الخصم</div>
+                    <div class="title">إجمالي الخصم (الكلي)</div>
                     <div class="value" id="statDeducted">0 <span class="unit">كوبون</span></div>
                 </div>
                 <div class="stat-card">
-                    <div class="title">رصيد الزبائن الحقيقي</div>
+                    <div class="title">رصيد الزبائن</div>
                     <div class="value" id="statBalance" style="color: var(--primary);">0 <span class="unit">كوبون</span></div>
                 </div>
             </div>
@@ -311,6 +313,7 @@
             <!-- التبويبات -->
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('rechargeTab', this)">شحن زبون</button>
+                <button class="tab-btn" onclick="switchTab('auditTab', this)">📊 الجرد الأسبوعي للموزعين</button>
                 <button class="tab-btn" onclick="switchTab('driverTab', this)">إضافة موزع</button>
                 <button class="tab-btn" onclick="switchTab('historyTab', this)">سجل الحركات</button>
             </div>
@@ -333,8 +336,35 @@
                             <input type="number" id="custCoupons" value="10" min="1" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn-submit">تأكيد الشحن وإرسال الواتساب</button>
+                    <button type="submit" class="btn-submit">تأكيد الشحن</button>
                 </form>
+            </div>
+
+            <!-- محتوى تبويب الجرد الأسبوعي -->
+            <div id="auditTab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h3>📊 الجرد والتقرير الأسبوعي للموزعين</h3>
+                        <p style="color: var(--text-light); font-size: 14px; margin-top: 4px;">يُظهر الحركات والخصم المنفذ لكل موزع للتسوية الحسابية السهلة</p>
+                    </div>
+                    <button onclick="loadStats()" class="btn-submit" style="background: #e2e8f0; color: var(--text); padding: 8px 16px;">تحديث التقرير</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم الموزع</th>
+                                <th>عدد عمليات الخصم</th>
+                                <th>إجمالي الكوبونات المخصومة</th>
+                                <th>نسبة المشاركة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditDriversTable">
+                            <tr><td colspan="4" style="text-align: center;">جاري تحضير الجرد...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- محتوى تبويب إضافة موزع -->
@@ -439,7 +469,7 @@
             btn.classList.add('active');
         }
 
-        // جلب الإحصائيات
+        // جلب الإحصائيات والجرد الأسبوعي
         async function loadStats() {
             if (!currentStation) return;
             const res = await fetch(`/api/station/${currentStation.id}/stats`);
@@ -448,6 +478,36 @@
                 document.getElementById('statRecharged').innerText = data.stats.totalRecharged;
                 document.getElementById('statDeducted').innerText = data.stats.totalDeducted;
                 document.getElementById('statBalance').innerText = data.stats.totalBalance;
+
+                // تحديث جدول الجرد الأسبوعي للموزعين
+                const auditTable = document.getElementById('auditDriversTable');
+                auditTable.innerHTML = '';
+
+                const driverStats = data.stats.driverStats || [];
+                const totalDeductedAll = parseInt(data.stats.totalDeducted) || 1;
+
+                if (driverStats.length === 0) {
+                    auditTable.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا توجد حركات خصم للموزعين حتى الآن</td></tr>';
+                } else {
+                    driverStats.forEach(d => {
+                        const percent = Math.round((parseInt(d.total_deducted) / totalDeductedAll) * 100);
+                        auditTable.innerHTML += `
+                            <tr>
+                                <td><b>${d.driver_name}</b></td>
+                                <td>${d.operations_count} عملية</td>
+                                <td><span style="color: var(--error); font-weight: bold;">${d.total_deducted} كوبون</span></td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div style="background: #e2e8f0; border-radius: 4px; height: 8px; width: 100px; overflow: hidden;">
+                                            <div style="background: var(--primary); height: 100%; width: ${percent}%;"></div>
+                                        </div>
+                                        <span>${percent}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
             }
         }
 
