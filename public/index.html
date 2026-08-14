@@ -19,20 +19,9 @@
             --radius: 12px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); min-height: 100vh; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        /* Top Navbar */
         .navbar {
             background-color: var(--card-bg);
             border-bottom: 1px solid var(--border);
@@ -45,258 +34,66 @@
             z-index: 100;
         }
 
-        .navbar .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--primary);
-        }
+        .navbar .brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; color: var(--primary); }
+        .btn-menu { background: none; border: 1px solid var(--border); font-size: 22px; padding: 4px 12px; border-radius: 8px; cursor: pointer; color: var(--text); }
+        .btn-switch { background: #e0f2fe; color: var(--primary); border: 1px solid #bae6fd; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .btn-logout { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 
-        .navbar .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .btn-menu {
-            background: none;
-            border: 1px solid var(--border);
-            font-size: 22px;
-            padding: 4px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            color: var(--text);
-            transition: all 0.2s;
-        }
-
-        .btn-menu:hover {
-            background: #f1f5f9;
-        }
-
-        .btn-switch {
-            background: #e0f2fe;
-            color: var(--primary);
-            border: 1px solid #bae6fd;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .btn-switch:hover { background: #bae6fd; }
-
-        .btn-logout {
-            background: #fef2f2;
-            color: var(--error);
-            border: 1px solid #fecaca;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-logout:hover { background: #fee2e2; }
-
-        /* Offcanvas Sidebar Menu */
+        /* Sidebar Side Menu */
         .sidebar {
-            position: fixed;
-            top: 0; right: -320px;
-            width: 300px;
-            height: 100%;
-            background: var(--card-bg);
-            box-shadow: -4px 0 15px rgba(0,0,0,0.1);
-            z-index: 1001;
-            transition: right 0.3s ease;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
+            background: var(--card-bg); box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+            z-index: 1001; transition: right 0.3s ease; padding: 24px; display: flex; flex-direction: column; gap: 12px;
         }
-
         .sidebar.active { right: 0; }
-
-        .sidebar-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.4);
-            z-index: 1000;
-            display: none;
-        }
-
+        .sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); z-index: 1000; display: none; }
         .sidebar-overlay.active { display: block; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 8px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 8px; color: var(--text); font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .menu-item:hover { background: #f1f5f9; color: var(--primary); }
 
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .menu-item:hover { background: #f1f5f9; }
-
-        /* Main Container */
-        .container {
-            max-width: 1200px;
-            margin: 32px auto;
-            padding: 0 20px;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
+        /* Main Elements */
+        .container { max-width: 1200px; margin: 32px auto; padding: 0 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .stat-card { background: var(--card-bg); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); }
         .stat-card .title { font-size: 14px; color: var(--text-light); font-weight: 600; }
-        .stat-card .value { font-size: 28px; font-weight: 800; margin-top: 8px; color: var(--text); }
-        .stat-card .unit { font-size: 14px; color: var(--text-light); font-weight: 500; }
+        .stat-card .value { font-size: 28px; font-weight: 800; margin-top: 8px; }
 
-        /* Tabs & Content */
-        .tabs {
-            display: flex;
-            gap: 12px;
-            border-bottom: 2px solid var(--border);
-            margin-bottom: 24px;
-        }
-
-        .tab-btn {
-            padding: 12px 20px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-light);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-            transition: all 0.2s;
-        }
-
+        .tabs { display: flex; gap: 12px; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
+        .tab-btn { padding: 12px 20px; background: none; border: none; font-size: 16px; font-weight: 700; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-        .tab-content {
-            display: none;
-            background: var(--card-bg);
-            padding: 28px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
+        .tab-content { display: none; background: var(--card-bg); padding: 28px; border-radius: var(--radius); border: 1px solid var(--border); }
         .tab-content.active { display: block; }
 
-        /* Forms */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         label { font-size: 14px; font-weight: 600; }
-        input, select {
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 15px;
-            outline: none;
-            background: #fafafa;
-        }
+        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; background: #fafafa; }
+        .btn-submit { background-color: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
 
-        input:focus, select:focus { border-color: var(--primary); background: #fff; }
-
-        .btn-submit {
-            background-color: var(--primary);
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-submit:hover { background-color: var(--primary-hover); }
-
-        /* Table */
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; text-align: right; }
         th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-        th { background-color: #f1f5f9; color: var(--text-light); font-weight: 700; font-size: 14px; }
+        th { background-color: #f1f5f9; color: var(--text-light); font-weight: 700; }
 
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
         .badge-recharge { background: #dcfce7; color: var(--success); }
         .badge-deduct { background: #fee2e2; color: var(--error); }
 
-        /* Modal */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-card {
-            background: white;
-            padding: 32px;
-            border-radius: var(--radius);
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-        }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-card { background: white; padding: 32px; border-radius: var(--radius); width: 100%; max-width: 400px; }
     </style>
 </head>
 <body>
 
-    <!-- نافذة تسجيل الدخول -->
+    <!-- تسجيل الدخول -->
     <div id="loginModal" class="modal">
         <div class="modal-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h2 style="font-size: 20px;">تسجيل دخول المحطة</h2>
-                <a href="/driver.html" class="btn-switch">🔄 شاشة الخصم</a>
-            </div>
-            <p style="color: var(--text-light); margin-bottom: 24px; font-size: 14px;">أدخل بيانات المحطة للوصول إلى لوحة التحكم</p>
+            <h2 style="font-size: 20px; margin-bottom: 16px;">تسجيل دخول المحطة</h2>
             <form id="loginForm">
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>رقم هاتف المحطة</label>
+                    <label>رقم الهاتف</label>
                     <input type="tel" id="loginPhone" placeholder="07XXXXXXXX" required>
                 </div>
                 <div class="form-group" style="margin-bottom: 24px;">
@@ -308,12 +105,16 @@
         </div>
     </div>
 
-    <!-- القائمة الجانبية (Sidebar) -->
+    <!-- القائمة الجانبية (الثلاث شحطات) -->
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleMenu()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h3>قائمة الخيارات</h3>
             <button onclick="toggleMenu()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <!-- الخانة الجديدة المضافة -->
+        <div class="menu-item" onclick="openMenuTab('customersTab')">
+            <span>👥</span> أرصدة وجرد الزبائن
         </div>
         <div class="menu-item" onclick="openMenuTab('auditTab')">
             <span>📊</span> الجرد الأسبوعي للموزعين
@@ -330,7 +131,7 @@
                 <button class="btn-menu" onclick="toggleMenu()">☰</button>
                 <div class="brand">💧 نظام كوبونات المياه</div>
             </div>
-            <div class="user-info">
+            <div style="display: flex; align-items: center; gap: 12px;">
                 <a href="/driver.html" class="btn-switch">🚚 شاشة الخصم</a>
                 <span id="stationNameDisplay" style="font-weight: 700;">محطة المياه</span>
                 <button class="btn-logout" onclick="logout()">خروج</button>
@@ -338,27 +139,25 @@
         </nav>
 
         <div class="container">
-            <!-- كروت الإحصائيات -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="title">إجمالي الشحن (الكلي)</div>
-                    <div class="value" id="statRecharged">0 <span class="unit">كوبون</span></div>
+                    <div class="title">إجمالي الشحن</div>
+                    <div class="value" id="statRecharged">0 كوبون</div>
                 </div>
                 <div class="stat-card">
-                    <div class="title">إجمالي الخصم (الكلي)</div>
-                    <div class="value" id="statDeducted">0 <span class="unit">كوبون</span></div>
+                    <div class="title">إجمالي الخصم</div>
+                    <div class="value" id="statDeducted">0 كوبون</div>
                 </div>
                 <div class="stat-card">
-                    <div class="title">رصيد الزبائن</div>
-                    <div class="value" id="statBalance" style="color: var(--primary);">0 <span class="unit">كوبون</span></div>
+                    <div class="title">رصيد الزبائن الإجمالي</div>
+                    <div class="value" id="statBalance" style="color: var(--primary);">0 كوبون</div>
                 </div>
             </div>
 
-            <!-- التبويبات الرئيسية -->
             <div class="tabs">
-                <button class="tab-btn active" id="btn-rechargeTab" onclick="switchTab('rechargeTab', this)">شحن زبون</button>
-                <button class="tab-btn" id="btn-driverTab" onclick="switchTab('driverTab', this)">إضافة موزع</button>
-                <button class="tab-btn" id="btn-historyTab" onclick="switchTab('historyTab', this)">سجل الحركات</button>
+                <button class="tab-btn active" onclick="switchTab('rechargeTab', this)">شحن زبون</button>
+                <button class="tab-btn" onclick="switchTab('driverTab', this)">إضافة موزع</button>
+                <button class="tab-btn" onclick="switchTab('historyTab', this)">سجل الحركات</button>
             </div>
 
             <!-- تبويب الشحن -->
@@ -366,32 +165,39 @@
                 <h3 style="margin-bottom: 16px;">شحن كوبونات لزبون</h3>
                 <form id="rechargeForm">
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label>اسم الزبون</label>
-                            <input type="text" id="custName" placeholder="الاسم الكامل" required>
-                        </div>
-                        <div class="form-group">
-                            <label>رقم الهاتف</label>
-                            <input type="tel" id="custPhone" placeholder="07XXXXXXXX" required>
-                        </div>
-                        <div class="form-group">
-                            <label>عدد الكوبونات</label>
-                            <input type="number" id="custCoupons" value="10" min="1" required>
-                        </div>
+                        <div class="form-group"><label>اسم الزبون</label><input type="text" id="custName" required></div>
+                        <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="custPhone" required></div>
+                        <div class="form-group"><label>عدد الكوبونات</label><input type="number" id="custCoupons" value="10" min="1" required></div>
                     </div>
                     <button type="submit" class="btn-submit">تأكيد الشحن</button>
                 </form>
             </div>
 
-            <!-- تبويب الجرد الأسبوعي (يفتح من القائمة) -->
-            <div id="auditTab" class="tab-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div>
-                        <h3>📊 الجرد والتقرير الأسبوعي للموزعين</h3>
-                        <p style="color: var(--text-light); font-size: 14px; margin-top: 4px;">حركات وخصم الموزعين للتسوية الحسابية السهلة</p>
-                    </div>
-                    <button onclick="loadStats()" class="btn-submit" style="background: #e2e8f0; color: var(--text); padding: 8px 16px;">تحديث</button>
+            <!-- تبويب أرصدة وجرد الزبائن (الجديد في القائمة) -->
+            <div id="customersTab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                    <h3>👥 أرصدة وحركات جميع الزبائن</h3>
+                    <input type="text" id="searchCustomer" onkeyup="filterCustomers()" placeholder="🔍 بحث باسم أو رقم الزبون..." style="padding: 10px 14px; width: 280px;">
                 </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم الزبون</th>
+                                <th>رقم الهاتف</th>
+                                <th>الرصيد المتبقي</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTable">
+                            <tr><td colspan="3" style="text-align: center;">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- تبويب الجرد الأسبوعي للموزعين -->
+            <div id="auditTab" class="tab-content">
+                <h3 style="margin-bottom: 20px;">📊 الجرد والتقرير الأسبوعي للموزعين</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -399,17 +205,16 @@
                                 <th>اسم الموزع</th>
                                 <th>عدد عمليات الخصم</th>
                                 <th>إجمالي الكوبونات المخصومة</th>
-                                <th>نسبة المشاركة</th>
                             </tr>
                         </thead>
                         <tbody id="auditDriversTable">
-                            <tr><td colspan="4" style="text-align: center;">جاري التحميل...</td></tr>
+                            <tr><td colspan="3" style="text-align: center;">جاري التحميل...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- تبويب إعادة تعيين كلمة السر (يفتح من القائمة) -->
+            <!-- تبويب إعادة تعيين كلمة السر -->
             <div id="resetPassTab" class="tab-content">
                 <h3 style="margin-bottom: 16px;">🔑 إعادة تعيين كلمة السر</h3>
                 <form id="resetPassForm">
@@ -430,7 +235,7 @@
                             <input type="password" id="newPassword" placeholder="••••••••" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn-submit">حفظ كلمة المرور الجديدة</button>
+                    <button type="submit" class="btn-submit">تعديل كلمة السر</button>
                 </form>
             </div>
 
@@ -439,36 +244,22 @@
                 <h3 style="margin-bottom: 16px;">إضافة موزع جديد</h3>
                 <form id="driverForm">
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label>اسم الموزع</label>
-                            <input type="text" id="driverName" placeholder="اسم الموزع" required>
-                        </div>
-                        <div class="form-group">
-                            <label>رقم الهاتف</label>
-                            <input type="tel" id="driverPhone" placeholder="07XXXXXXXX" required>
-                        </div>
-                        <div class="form-group">
-                            <label>كلمة المرور</label>
-                            <input type="password" id="driverPassword" placeholder="••••••••" required>
-                        </div>
+                        <div class="form-group"><label>اسم الموزع</label><input type="text" id="driverName" required></div>
+                        <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="driverPhone" required></div>
+                        <div class="form-group"><label>كلمة المرور</label><input type="password" id="driverPassword" required></div>
                     </div>
                     <button type="submit" class="btn-submit">حفظ الموزع</button>
                 </form>
             </div>
 
-            <!-- تبويب السجل -->
+            <!-- تبويب السجل الكلي -->
             <div id="historyTab" class="tab-content">
-                <h3 style="margin-bottom: 16px;">سجل آخر الحركات</h3>
+                <h3 style="margin-bottom: 16px;">سجل آخر الحركات الكلي</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th>التاريخ والوقت</th>
-                                <th>النوع</th>
-                                <th>اسم الزبون</th>
-                                <th>رقم الهاتف</th>
-                                <th>الكمية</th>
-                                <th>المنفذ</th>
+                                <th>التاريخ</th><th>النوع</th><th>اسم الزبون</th><th>رقم الهاتف</th><th>الكمية</th><th>المنفذ</th>
                             </tr>
                         </thead>
                         <tbody id="transactionsTable">
@@ -483,10 +274,9 @@
 
     <script>
         let currentStation = JSON.parse(localStorage.getItem('station_user')) || null;
+        let allCustomers = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (currentStation) showDashboard();
-        });
+        document.addEventListener('DOMContentLoaded', () => { if (currentStation) showDashboard(); });
 
         function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -498,32 +288,24 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
+            
+            if (tabId === 'customersTab') loadCustomersSummary();
             if (tabId === 'auditTab') loadStats();
         }
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const phone = document.getElementById('loginPhone').value;
-            const password = document.getElementById('loginPassword').value;
-
-            try {
-                const res = await fetch('/api/station/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, password })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    currentStation = data.station;
-                    localStorage.setItem('station_user', JSON.stringify(currentStation));
-                    showDashboard();
-                } else {
-                    alert(data.message);
-                }
-            } catch (err) {
-                alert('خطأ في الاتصال بالخادم');
-            }
+            const res = await fetch('/api/station/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: document.getElementById('loginPhone').value, password: document.getElementById('loginPassword').value })
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentStation = data.station;
+                localStorage.setItem('station_user', JSON.stringify(currentStation));
+                showDashboard();
+            } else alert(data.message);
         });
 
         function showDashboard() {
@@ -534,10 +316,7 @@
             loadTransactions();
         }
 
-        function logout() {
-            localStorage.removeItem('station_user');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('station_user'); location.reload(); }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -550,48 +329,66 @@
             document.getElementById('driverSelectGroup').style.display = (val === 'driver') ? 'flex' : 'none';
         }
 
+        // جلب قائمة الزبائن وأرصدتهم
+        async function loadCustomersSummary() {
+            if (!currentStation) return;
+            const res = await fetch(`/api/station/${currentStation.id}/customers-summary`);
+            const data = await res.json();
+            if (data.success) {
+                allCustomers = data.customers;
+                renderCustomersTable(allCustomers);
+            }
+        }
+
+        function renderCustomersTable(list) {
+            const tbody = document.getElementById('customersTable');
+            tbody.innerHTML = '';
+            if(!list || list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا يوجد زبائن مسجلين حتى الآن</td></tr>';
+                return;
+            }
+            list.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${c.name}</b></td>
+                        <td>${c.phone}</td>
+                        <td><span style="color:var(--primary); font-weight:800; font-size:16px;">${c.coupons} كوبون</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterCustomers() {
+            const query = document.getElementById('searchCustomer').value.toLowerCase();
+            const filtered = allCustomers.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
+            renderCustomersTable(filtered);
+        }
+
         // جلب الإحصائيات والجرد
         async function loadStats() {
             if (!currentStation) return;
             const res = await fetch(`/api/station/${currentStation.id}/stats`);
             const data = await res.json();
             if (data.success) {
-                document.getElementById('statRecharged').innerText = data.stats.totalRecharged;
-                document.getElementById('statDeducted').innerText = data.stats.totalDeducted;
-                document.getElementById('statBalance').innerText = data.stats.totalBalance;
+                document.getElementById('statRecharged').innerText = data.stats.totalRecharged + ' كوبون';
+                document.getElementById('statDeducted').innerText = data.stats.totalDeducted + ' كوبون';
+                document.getElementById('statBalance').innerText = data.stats.totalBalance + ' كوبون';
 
                 const auditTable = document.getElementById('auditDriversTable');
                 auditTable.innerHTML = '';
-
-                const driverStats = data.stats.driverStats || [];
-                const totalDeductedAll = parseInt(data.stats.totalDeducted) || 1;
-
-                if (driverStats.length === 0) {
-                    auditTable.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا توجد حركات خصم للموزعين حتى الآن</td></tr>';
-                } else {
-                    driverStats.forEach(d => {
-                        const percent = Math.round((parseInt(d.total_deducted) / totalDeductedAll) * 100);
-                        auditTable.innerHTML += `
-                            <tr>
-                                <td><b>${d.driver_name}</b></td>
-                                <td>${d.operations_count} عملية</td>
-                                <td><span style="color: var(--error); font-weight: bold;">${d.total_deducted} كوبون</span></td>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <div style="background: #e2e8f0; border-radius: 4px; height: 8px; width: 100px; overflow: hidden;">
-                                            <div style="background: var(--primary); height: 100%; width: ${percent}%;"></div>
-                                        </div>
-                                        <span>${percent}%</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
+                (data.stats.driverStats || []).forEach(d => {
+                    auditTable.innerHTML += `
+                        <tr>
+                            <td><b>${d.driver_name}</b></td>
+                            <td>${d.operations_count} عملية</td>
+                            <td><b style="color:var(--error);">${d.total_deducted} كوبون</b></td>
+                        </tr>
+                    `;
+                });
             }
         }
 
-        // جلب السجل
+        // جلب السجل الكلي
         async function loadTransactions() {
             if (!currentStation) return;
             const res = await fetch(`/api/station/${currentStation.id}/transactions`);
@@ -600,12 +397,10 @@
                 const tbody = document.getElementById('transactionsTable');
                 tbody.innerHTML = '';
                 data.transactions.forEach(t => {
-                    const badgeClass = t.action_type === 'شحن' ? 'badge-recharge' : 'badge-deduct';
-                    const date = new Date(t.created_at).toLocaleString('ar-JO');
                     tbody.innerHTML += `
                         <tr>
-                            <td>${date}</td>
-                            <td><span class="badge ${badgeClass}">${t.action_type}</span></td>
+                            <td>${new Date(t.created_at).toLocaleString('ar-JO')}</td>
+                            <td><span class="badge ${t.action_type === 'شحن' ? 'badge-recharge' : 'badge-deduct'}">${t.action_type}</span></td>
                             <td>${t.customer_name}</td>
                             <td>${t.customer_phone}</td>
                             <td><b>${t.amount}</b></td>
@@ -619,44 +414,34 @@
         // شحن رصيد
         document.getElementById('rechargeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const payload = {
-                stationId: currentStation.id,
-                name: document.getElementById('custName').value,
-                phone: document.getElementById('custPhone').value,
-                coupons: document.getElementById('custCoupons').value
-            };
-
             const res = await fetch('/api/customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    stationId: currentStation.id,
+                    name: document.getElementById('custName').value,
+                    phone: document.getElementById('custPhone').value,
+                    coupons: document.getElementById('custCoupons').value
+                })
             });
-
             const data = await res.json();
             alert(data.message);
-            if (data.success) {
-                document.getElementById('rechargeForm').reset();
-                loadStats();
-                loadTransactions();
-            }
+            if (data.success) { document.getElementById('rechargeForm').reset(); loadStats(); loadTransactions(); }
         });
 
         // إضافة موزع
         document.getElementById('driverForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const payload = {
-                stationId: currentStation.id,
-                name: document.getElementById('driverName').value,
-                phone: document.getElementById('driverPhone').value,
-                password: document.getElementById('driverPassword').value
-            };
-
             const res = await fetch('/api/drivers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    stationId: currentStation.id,
+                    name: document.getElementById('driverName').value,
+                    phone: document.getElementById('driverPhone').value,
+                    password: document.getElementById('driverPassword').value
+                })
             });
-
             const data = await res.json();
             alert(data.message);
             if (data.success) document.getElementById('driverForm').reset();
@@ -666,20 +451,16 @@
         document.getElementById('resetPassForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const type = document.getElementById('resetAccountType').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const driverPhone = document.getElementById('resetDriverPhone').value;
-
             const endpoint = type === 'station' ? '/api/station/reset-password' : '/api/driver/reset-password';
             const payload = type === 'station' 
-                ? { stationId: currentStation.id, newPassword }
-                : { stationId: currentStation.id, driverPhone, newPassword };
+                ? { stationId: currentStation.id, newPassword: document.getElementById('newPassword').value }
+                : { stationId: currentStation.id, driverPhone: document.getElementById('resetDriverPhone').value, newPassword: document.getElementById('newPassword').value };
 
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
             const data = await res.json();
             alert(data.message);
             if (data.success) document.getElementById('resetPassForm').reset();
