@@ -3,145 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خصم واستعلام الكوبونات</title>
-    <link rel="stylesheet" href="style.css">
+    <title>نظام كوبونات المياه - بوابة الخصم</title>
+    <!-- خط Tajawal لتصميم احترافي -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --error: #dc2626;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
         body {
-            background-color: #f4f7f6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 15px;
-        }
-        .card {
-            background: #ffffff;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
         }
-        .result-box {
+
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            padding: 32px 24px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header .icon {
+            width: 56px;
+            height: 56px;
+            background: #e0f2fe;
+            color: var(--primary);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            outline: none;
+            background-color: #fafafa;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 18px;
             display: none;
             text-align: center;
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: #eef7ff;
-            border: 1px solid #bce0fd;
+            font-weight: 500;
         }
-        .result-number {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #007bf5;
-            line-height: 1.1;
+
+        .alert-success {
+            background-color: #f0fdf4;
+            color: var(--success);
+            border: 1px solid #bbf7d0;
         }
-        .result-text {
-            font-size: 1.2rem;
-            color: #333;
-            margin-top: 8px;
+
+        .alert-error {
+            background-color: #fef2f2;
+            color: var(--error);
+            border: 1px solid #fecaca;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-light);
         }
     </style>
 </head>
 <body>
+
     <div class="container">
-        
-        <div style="text-align: left; margin-bottom: 15px;">
-            <a href="/" class="btn" style="background-color: #6c757d; text-decoration: none; padding: 8px 16px;">← العودة لشاشة المحطة</a>
+        <div class="header">
+            <div class="icon">💧</div>
+            <h2>بوابة الخصم للموزعين</h2>
+            <p>قم بخصم الكوبونات وإرسال الإشعار للزبون مباشرة</p>
         </div>
 
-        <h1 style="text-align: center; color: #007bf5;">💧 نظام كوبونات الماء</h1>
-
-        <!-- قسم الاستعلام عن الرصيد -->
-        <div class="card">
-            <h3 style="text-align: center; color: #007bf5;">استعلام عن رصيد الكوبونات</h3>
-            <input type="tel" id="searchPhone" placeholder="رقم هاتف الزبون">
-            <button class="btn" onclick="checkBalance()">عرض الرصيد</button>
-
-            <div id="resultBox" class="result-box">
-                <div class="result-number" id="resCoupons">0</div>
-                <div class="result-text">مرحباً <span id="resName" style="font-weight: bold;"></span> - كوبون متبقي</div>
+        <form id="deductForm">
+            <div class="form-group">
+                <label for="driverPhone">رقم هاتف الموزع</label>
+                <input type="tel" id="driverPhone" placeholder="07XXXXXXXX" required>
             </div>
-        </div>
 
-        <!-- قسم الخصم للموزع -->
-        <div class="card">
-            <h3 style="text-align: center; color: #28a745;">خصم كوبونات (للموزع)</h3>
-            <input type="tel" id="driverPhone" placeholder="رقم هاتف الموزع">
-            <input type="password" id="driverPassword" placeholder="كلمة مرور الموزع">
-            <input type="tel" id="deductCustomerPhone" placeholder="رقم هاتف الزبون">
-            <input type="number" id="deductAmount" placeholder="عدد الكوبونات المراد خصمها" value="1" min="1">
-            <button class="btn btn-success" onclick="deductCoupon()">خصم الكوبونات</button>
-        </div>
+            <div class="form-group">
+                <label for="driverPassword">كلمة مرور الموزع</label>
+                <input type="password" id="driverPassword" placeholder="••••••••" required>
+            </div>
 
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
+            <div class="row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="customerPhone">رقم هاتف الزبون</label>
+                    <input type="tel" id="customerPhone" placeholder="07XXXXXXXX" required>
+                </div>
+
+                <div class="form-group" style="flex: 1;">
+                    <label for="amount">عدد الكوبونات</label>
+                    <input type="number" id="amount" value="1" min="1" required>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn">تاكيد الخصم والإرسال</button>
+        </form>
+
+        <div id="alertBox" class="alert"></div>
+
+        <div class="footer-note">
+            يتم تسجيل العملية فوراً وإرسال إشعار واتساب للزبون
+        </div>
     </div>
 
-    <div id="toast"></div>
-
     <script>
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.className = `show ${type}`;
-            setTimeout(() => { toast.className = toast.className.replace(`show ${type}`, ''); }, 3000);
-        }
+        const form = document.getElementById('deductForm');
+        const alertBox = document.getElementById('alertBox');
+        const submitBtn = document.getElementById('submitBtn');
 
-        async function checkBalance() {
-            const phone = document.getElementById('searchPhone').value.trim();
-            const resultBox = document.getElementById('resultBox');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // إخفاء التنبيه السابق وتعطيل الزر مؤقتاً
+            alertBox.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'جاري تنفيذ الخصم...';
 
-            if (!phone) {
-                return showToast('يرجى إدخال رقم هاتف الزبون', 'error');
-            }
-
-            try {
-                const res = await fetch(`/api/customers/${phone}`);
-                const data = await res.json();
-
-                if (data.success && data.customer) {
-                    document.getElementById('resCoupons').innerText = data.customer.coupons;
-                    document.getElementById('resName').innerText = data.customer.name;
-                    resultBox.style.display = 'block';
-                } else {
-                    resultBox.style.display = 'none';
-                    showToast(data.message || 'الزبون غير موجود', 'error');
-                }
-            } catch (err) {
-                resultBox.style.display = 'none';
-                showToast('خطأ في الاتصال بالسيرفر', 'error');
-            }
-        }
-
-        async function deductCoupon() {
-            const driverPhone = document.getElementById('driverPhone').value.trim();
-            const driverPassword = document.getElementById('driverPassword').value.trim();
-            const customerPhone = document.getElementById('deductCustomerPhone').value.trim();
-            const amount = parseInt(document.getElementById('deductAmount').value) || 1;
-
-            if (!driverPhone || !driverPassword || !customerPhone || amount < 1) {
-                return showToast('يرجى ملء جميع الحقول بشكل صحيح', 'error');
-            }
+            const payload = {
+                driverPhone: document.getElementById('driverPhone').value,
+                driverPassword: document.getElementById('driverPassword').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                amount: document.getElementById('amount').value
+            };
 
             try {
-                const res = await fetch('/api/deduct', {
+                const response = await fetch('/api/deduct', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ driverPhone, driverPassword, customerPhone, amount })
+                    body: JSON.stringify(payload)
                 });
-                const data = await res.json();
+
+                const data = await response.json();
 
                 if (data.success) {
-                    showToast(data.message, 'success');
-                    document.getElementById('searchPhone').value = customerPhone;
-                    checkBalance();
+                    alertBox.className = 'alert alert-success';
+                    alertBox.innerText = data.message;
+                    // إعادة تعيين حقول الزبون فقط لسهولة إدخال عملية جديدة
+                    document.getElementById('customerPhone').value = '';
+                    document.getElementById('amount').value = '1';
                 } else {
-                    showToast(data.message, 'error');
+                    alertBox.className = 'alert alert-error';
+                    alertBox.innerText = data.message;
                 }
             } catch (err) {
-                showToast('خطأ أثناء عملية الخصم', 'error');
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = 'حدث خطأ في الاتصال بالسيرفر';
+            } finally {
+                alertBox.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'تاكيد الخصم والإرسال';
             }
-        }
+        });
     </script>
 </body>
 </html>
