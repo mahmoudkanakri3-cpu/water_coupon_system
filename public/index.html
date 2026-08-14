@@ -57,8 +57,40 @@
         .navbar .user-info {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
+
+        .btn-menu {
+            background: none;
+            border: 1px solid var(--border);
+            font-size: 22px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-switch {
+            background: #e0f2fe;
+            color: var(--primary);
+            border: 1px solid #bae6fd;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-switch:hover { background: #bae6fd; }
 
         .btn-logout {
             background: #fef2f2;
@@ -71,9 +103,58 @@
             transition: all 0.2s;
         }
 
-        .btn-logout:hover {
-            background: #fee2e2;
+        .btn-logout:hover { background: #fee2e2; }
+
+        /* Offcanvas Sidebar Menu */
+        .sidebar {
+            position: fixed;
+            top: 0; right: -320px;
+            width: 300px;
+            height: 100%;
+            background: var(--card-bg);
+            box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+            z-index: 1001;
+            transition: right 0.3s ease;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
+
+        .sidebar.active { right: 0; }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.4);
+            z-index: 1000;
+            display: none;
+        }
+
+        .sidebar-overlay.active { display: block; }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover { background: #f1f5f9; }
 
         /* Main Container */
         .container {
@@ -98,24 +179,9 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        .stat-card .title {
-            font-size: 14px;
-            color: var(--text-light);
-            font-weight: 600;
-        }
-
-        .stat-card .value {
-            font-size: 28px;
-            font-weight: 800;
-            margin-top: 8px;
-            color: var(--text);
-        }
-
-        .stat-card .unit {
-            font-size: 14px;
-            color: var(--text-light);
-            font-weight: 500;
-        }
+        .stat-card .title { font-size: 14px; color: var(--text-light); font-weight: 600; }
+        .stat-card .value { font-size: 28px; font-weight: 800; margin-top: 8px; color: var(--text); }
+        .stat-card .unit { font-size: 14px; color: var(--text-light); font-weight: 500; }
 
         /* Tabs & Content */
         .tabs {
@@ -123,7 +189,6 @@
             gap: 12px;
             border-bottom: 2px solid var(--border);
             margin-bottom: 24px;
-            overflow-x: auto;
         }
 
         .tab-btn {
@@ -137,13 +202,9 @@
             border-bottom: 3px solid transparent;
             margin-bottom: -2px;
             transition: all 0.2s;
-            white-space: nowrap;
         }
 
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         .tab-content {
             display: none;
@@ -154,9 +215,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content.active { display: block; }
 
         /* Forms */
         .form-grid {
@@ -166,18 +225,9 @@
             margin-bottom: 20px;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        label {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        input {
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 14px; font-weight: 600; }
+        input, select {
             padding: 12px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -186,10 +236,7 @@
             background: #fafafa;
         }
 
-        input:focus {
-            border-color: var(--primary);
-            background: #fff;
-        }
+        input:focus, select:focus { border-color: var(--primary); background: #fff; }
 
         .btn-submit {
             background-color: var(--primary);
@@ -203,44 +250,19 @@
             transition: background 0.2s;
         }
 
-        .btn-submit:hover {
-            background-color: var(--primary-hover);
-        }
+        .btn-submit:hover { background-color: var(--primary-hover); }
 
         /* Table */
-        .table-responsive {
-            overflow-x: auto;
-        }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+        th { background-color: #f1f5f9; color: var(--text-light); font-weight: 700; font-size: 14px; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: right;
-        }
-
-        th, td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background-color: #f1f5f9;
-            color: var(--text-light);
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
         .badge-recharge { background: #dcfce7; color: var(--success); }
         .badge-deduct { background: #fee2e2; color: var(--error); }
 
-        /* Login Modal */
+        /* Modal */
         .modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -264,11 +286,14 @@
 </head>
 <body>
 
-    <!-- نافذة تسجيل الدخول للمحطة -->
+    <!-- نافذة تسجيل الدخول -->
     <div id="loginModal" class="modal">
         <div class="modal-card">
-            <h2 style="text-align: center; margin-bottom: 8px;">تسجيل دخول المحطة</h2>
-            <p style="text-align: center; color: var(--text-light); margin-bottom: 24px; font-size: 14px;">أدخل بيانات المحطة للوصول إلى لوحة التحكم</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 20px;">تسجيل دخول المحطة</h2>
+                <a href="/driver.html" class="btn-switch">🔄 شاشة الخصم</a>
+            </div>
+            <p style="color: var(--text-light); margin-bottom: 24px; font-size: 14px;">أدخل بيانات المحطة للوصول إلى لوحة التحكم</p>
             <form id="loginForm">
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>رقم هاتف المحطة</label>
@@ -283,18 +308,37 @@
         </div>
     </div>
 
+    <!-- القائمة الجانبية (Sidebar) -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleMenu()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>قائمة الخيارات</h3>
+            <button onclick="toggleMenu()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <div class="menu-item" onclick="openMenuTab('auditTab')">
+            <span>📊</span> الجرد الأسبوعي للموزعين
+        </div>
+        <div class="menu-item" onclick="openMenuTab('resetPassTab')">
+            <span>🔑</span> إعادة تعيين كلمة السر
+        </div>
+    </div>
+
     <!-- الواجهة الرئيسية -->
     <div id="mainDashboard" style="display: none;">
         <nav class="navbar">
-            <div class="brand">💧 نظام كوبونات المياه</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="btn-menu" onclick="toggleMenu()">☰</button>
+                <div class="brand">💧 نظام كوبونات المياه</div>
+            </div>
             <div class="user-info">
+                <a href="/driver.html" class="btn-switch">🚚 شاشة الخصم</a>
                 <span id="stationNameDisplay" style="font-weight: 700;">محطة المياه</span>
                 <button class="btn-logout" onclick="logout()">خروج</button>
             </div>
         </nav>
 
         <div class="container">
-            <!-- كروت الإحصائيات الشاملة -->
+            <!-- كروت الإحصائيات -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="title">إجمالي الشحن (الكلي)</div>
@@ -310,15 +354,14 @@
                 </div>
             </div>
 
-            <!-- التبويبات -->
+            <!-- التبويبات الرئيسية -->
             <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('rechargeTab', this)">شحن زبون</button>
-                <button class="tab-btn" onclick="switchTab('auditTab', this)">📊 الجرد الأسبوعي للموزعين</button>
-                <button class="tab-btn" onclick="switchTab('driverTab', this)">إضافة موزع</button>
-                <button class="tab-btn" onclick="switchTab('historyTab', this)">سجل الحركات</button>
+                <button class="tab-btn active" id="btn-rechargeTab" onclick="switchTab('rechargeTab', this)">شحن زبون</button>
+                <button class="tab-btn" id="btn-driverTab" onclick="switchTab('driverTab', this)">إضافة موزع</button>
+                <button class="tab-btn" id="btn-historyTab" onclick="switchTab('historyTab', this)">سجل الحركات</button>
             </div>
 
-            <!-- محتوى تبويب الشحن -->
+            <!-- تبويب الشحن -->
             <div id="rechargeTab" class="tab-content active">
                 <h3 style="margin-bottom: 16px;">شحن كوبونات لزبون</h3>
                 <form id="rechargeForm">
@@ -340,16 +383,15 @@
                 </form>
             </div>
 
-            <!-- محتوى تبويب الجرد الأسبوعي -->
+            <!-- تبويب الجرد الأسبوعي (يفتح من القائمة) -->
             <div id="auditTab" class="tab-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div>
                         <h3>📊 الجرد والتقرير الأسبوعي للموزعين</h3>
-                        <p style="color: var(--text-light); font-size: 14px; margin-top: 4px;">يُظهر الحركات والخصم المنفذ لكل موزع للتسوية الحسابية السهلة</p>
+                        <p style="color: var(--text-light); font-size: 14px; margin-top: 4px;">حركات وخصم الموزعين للتسوية الحسابية السهلة</p>
                     </div>
-                    <button onclick="loadStats()" class="btn-submit" style="background: #e2e8f0; color: var(--text); padding: 8px 16px;">تحديث التقرير</button>
+                    <button onclick="loadStats()" class="btn-submit" style="background: #e2e8f0; color: var(--text); padding: 8px 16px;">تحديث</button>
                 </div>
-
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -361,13 +403,38 @@
                             </tr>
                         </thead>
                         <tbody id="auditDriversTable">
-                            <tr><td colspan="4" style="text-align: center;">جاري تحضير الجرد...</td></tr>
+                            <tr><td colspan="4" style="text-align: center;">جاري التحميل...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- محتوى تبويب إضافة موزع -->
+            <!-- تبويب إعادة تعيين كلمة السر (يفتح من القائمة) -->
+            <div id="resetPassTab" class="tab-content">
+                <h3 style="margin-bottom: 16px;">🔑 إعادة تعيين كلمة السر</h3>
+                <form id="resetPassForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>نوع الحساب</label>
+                            <select id="resetAccountType" onchange="toggleResetTarget(this.value)">
+                                <option value="station">كلمة سر المحطة</option>
+                                <option value="driver">كلمة سر موزع</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="driverSelectGroup" style="display: none;">
+                            <label>رقم هاتف الموزع</label>
+                            <input type="tel" id="resetDriverPhone" placeholder="07XXXXXXXX">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور الجديدة</label>
+                            <input type="password" id="newPassword" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">حفظ كلمة المرور الجديدة</button>
+                </form>
+            </div>
+
+            <!-- تبويب إضافة موزع -->
             <div id="driverTab" class="tab-content">
                 <h3 style="margin-bottom: 16px;">إضافة موزع جديد</h3>
                 <form id="driverForm">
@@ -389,7 +456,7 @@
                 </form>
             </div>
 
-            <!-- محتوى تبويب السجل -->
+            <!-- تبويب السجل -->
             <div id="historyTab" class="tab-content">
                 <h3 style="margin-bottom: 16px;">سجل آخر الحركات</h3>
                 <div class="table-responsive">
@@ -418,12 +485,22 @@
         let currentStation = JSON.parse(localStorage.getItem('station_user')) || null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (currentStation) {
-                showDashboard();
-            }
+            if (currentStation) showDashboard();
         });
 
-        // تسجيل دخول المحطة
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function openMenuTab(tabId) {
+            toggleMenu();
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'auditTab') loadStats();
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const phone = document.getElementById('loginPhone').value;
@@ -466,10 +543,14 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
+            if (btn) btn.classList.add('active');
         }
 
-        // جلب الإحصائيات والجرد الأسبوعي
+        function toggleResetTarget(val) {
+            document.getElementById('driverSelectGroup').style.display = (val === 'driver') ? 'flex' : 'none';
+        }
+
+        // جلب الإحصائيات والجرد
         async function loadStats() {
             if (!currentStation) return;
             const res = await fetch(`/api/station/${currentStation.id}/stats`);
@@ -479,7 +560,6 @@
                 document.getElementById('statDeducted').innerText = data.stats.totalDeducted;
                 document.getElementById('statBalance').innerText = data.stats.totalBalance;
 
-                // تحديث جدول الجرد الأسبوعي للموزعين
                 const auditTable = document.getElementById('auditDriversTable');
                 auditTable.innerHTML = '';
 
@@ -511,7 +591,7 @@
             }
         }
 
-        // جلب سجل الحركات
+        // جلب السجل
         async function loadTransactions() {
             if (!currentStation) return;
             const res = await fetch(`/api/station/${currentStation.id}/transactions`);
@@ -536,7 +616,7 @@
             }
         }
 
-        // شحن رصيد زبون
+        // شحن رصيد
         document.getElementById('rechargeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = {
@@ -579,9 +659,30 @@
 
             const data = await res.json();
             alert(data.message);
-            if (data.success) {
-                document.getElementById('driverForm').reset();
-            }
+            if (data.success) document.getElementById('driverForm').reset();
+        });
+
+        // إعادة تعيين كلمة السر
+        document.getElementById('resetPassForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = document.getElementById('resetAccountType').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const driverPhone = document.getElementById('resetDriverPhone').value;
+
+            const endpoint = type === 'station' ? '/api/station/reset-password' : '/api/driver/reset-password';
+            const payload = type === 'station' 
+                ? { stationId: currentStation.id, newPassword }
+                : { stationId: currentStation.id, driverPhone, newPassword };
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) document.getElementById('resetPassForm').reset();
         });
     </script>
 </body>
